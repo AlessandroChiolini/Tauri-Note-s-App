@@ -1,50 +1,144 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [notebooks, setNotebooks] = useState([]);
+  const [selectedNotebook, setSelectedNotebook] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [selectedNote, setSelectedNote] = useState(null);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  // Load notebooks from SQLite when the app starts
+  useEffect(() => {
+    fetchNotebooks();
+  }, []);
+
+  // Fetch all notebooks from Tauri SQLite
+  const fetchNotebooks = async () => {
+    try {
+      const result = await invoke("get_notebooks");
+      setNotebooks(result);
+    } catch (error) {
+      console.error("Error fetching notebooks:", error);
+    }
+  };
+
+  // Fetch notes when a notebook is selected
+  const selectNotebook = async (notebook) => {
+    setSelectedNotebook(notebook);
+    try {
+      const result = await invoke("get_notes", { notebook_id: notebook.id });
+      setNotes(result);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  };
+
+  // Add a new notebook
+  const addNotebook = async () => {
+    const title = prompt("Enter notebook name:");
+    if (!title) return;
+
+    try {
+      await invoke("add_notebook", { title });
+      fetchNotebooks(); // Reload the notebooks list
+    } catch (error) {
+      console.error("Error adding notebook:", error);
+    }
+  };
+
+  // Add a new note to the selected notebook
+  const addNote = async () => {
+    if (!selectedNotebook) return;
+    const title = prompt("Enter note title:");
+    if (!title) return;
+
+    try {
+      await invoke("add_note", {
+        notebook_id: selectedNotebook.id,
+        title,
+        content: "",
+      });
+      selectNotebook(selectedNotebook); // Reload the notes list
+    } catch (error) {
+      console.error("Error adding note:", error);
+    }
+  };
+
+  // Select a note
+  const selectNote = (note) => {
+    setSelectedNote(note);
+  };
+
+  // Edit and save a note
+  const editNote = async (event) => {
+    if (!selectedNote) return;
+
+    const updatedContent = event.target.value;
+    setSelectedNote((prev) => ({ ...prev, content: updatedContent }));
+
+    try {
+      await invoke("update_note", {
+        note_id: selectedNote.id,
+        title: selectedNote.title,
+        content: updatedContent,
+      });
+    } catch (error) {
+      console.error("Error updating note:", error);
+    }
+  };
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="app-container">
+      {/* Sidebar for Notebooks */}
+      <aside className="sidebar">
+        <h2>Joplin (Tauri)</h2>
+        <button onClick={addNotebook}>+ New Notebook</button>
+        <ul>
+          {notebooks.map((nb) => (
+            <li
+              key={nb.id}
+              onClick={() => selectNotebook(nb)}
+              className={selectedNotebook?.id === nb.id ? "active" : ""}
+            >
+              {nb.title}
+            </li>
+          ))}
+        </ul>
+      </aside>
 
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+      {/* Sidebar for Notes */}
+      <aside className="notes-sidebar">
+        <button onClick={addNote} disabled={!selectedNotebook}>
+          + New Note
+        </button>
+        <ul>
+          {notes.map((note) => (
+            <li
+              key={note.id}
+              onClick={() => selectNote(note)}
+              className={selectedNote?.id === note.id ? "active" : ""}
+            >
+              {note.title}
+            </li>
+          ))}
+        </ul>
+      </aside>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+      {/* Note Editor */}
+      <main className="editor">
+        <div className="toolbar">
+          <h3>{selectedNote ? selectedNote.title : "No Note Selected"}</h3>
+        </div>
+
+        <textarea
+          placeholder="Write your note here..."
+          value={selectedNote?.content || ""}
+          onChange={editNote}
+          disabled={!selectedNote}
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      </main>
+    </div>
   );
 }
 
