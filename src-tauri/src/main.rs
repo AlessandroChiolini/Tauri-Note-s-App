@@ -3,6 +3,8 @@
 
 use rusqlite::{params, Connection, Result};
 use serde::{Deserialize, Serialize};
+use std::env;
+use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::command;
 
@@ -29,7 +31,8 @@ struct Database {
 
 impl Database {
     fn new() -> Result<Self> {
-        let conn = Connection::open("notes.db")?;
+        let db_path = r"C:\Users\aless\OneDrive\Bureau\Tauri-app\notes.db";
+        let conn = Connection::open(db_path)?;
 
         // Create Notebooks Table
         conn.execute(
