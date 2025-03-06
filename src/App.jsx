@@ -1,143 +1,107 @@
 import { useState, useEffect } from "react";
+// Use `@tauri-apps/api/tauri` if it works in your environment, otherwise `@tauri-apps/api/core`
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 function App() {
+  // State: list of notebooks
   const [notebooks, setNotebooks] = useState([]);
-  const [selectedNotebook, setSelectedNotebook] = useState(null);
+  // State: list of notes for the selected notebook
   const [notes, setNotes] = useState([]);
+  // State: ID of the selected notebook
+  const [selectedNotebook, setSelectedNotebook] = useState(null);
+  // State: ID of the selected note (to show its content on the right)
   const [selectedNote, setSelectedNote] = useState(null);
 
-  // Load notebooks from SQLite when the app starts
+  // ===========================
+  //  Fetch Notebooks on Load
+  // ===========================
   useEffect(() => {
-    fetchNotebooks();
+    console.log("Fetching notebooks...");
+    invoke("get_notebooks")
+      .then((data) => {
+        console.log("Notebooks fetched:", data);
+        setNotebooks(data);
+      })
+      .catch((error) => console.error("Error fetching notebooks:", error));
   }, []);
 
-  // Fetch all notebooks from Tauri SQLite
-  const fetchNotebooks = async () => {
-    try {
-      const result = await invoke("get_notebooks");
-      setNotebooks(result);
-    } catch (error) {
-      console.error("Error fetching notebooks:", error);
-    }
+  // ===========================
+  //  Fetch Notes for a Notebook
+  // ===========================
+  const fetchNotes = (notebookId) => {
+    console.log("Notebook selected:", notebookId);
+    setSelectedNotebook(notebookId);
+    setSelectedNote(null); // reset selected note
+
+    invoke("get_notes", { notebookId })
+      .then((data) => {
+        console.log("Notes received:", data);
+        setNotes(data);
+      })
+      .catch((error) => console.error("Error fetching notes:", error));
   };
 
-  // Fetch notes when a notebook is selected
-  const selectNotebook = async (notebook) => {
-    setSelectedNotebook(notebook);
-    try {
-      const result = await invoke("get_notes", { notebook_id: notebook.id });
-      setNotes(result);
-    } catch (error) {
-      console.error("Error fetching notes:", error);
-    }
+  // ===========================
+  //  Select a Note to View
+  // ===========================
+  const handleSelectNote = (noteId) => {
+    setSelectedNote(noteId);
   };
 
-  // Add a new notebook
-  const addNotebook = async () => {
-    const title = prompt("Enter notebook name:");
-    if (!title) return;
+  // ===========================
+  //  Get Content of Selected Note
+  // ===========================
+  const selectedNoteContent = (() => {
+    if (!selectedNote) return "Select a note to view its content";
+    const noteObj = notes.find((n) => n.id === selectedNote);
+    return noteObj ? noteObj.content : "Note content not found";
+  })();
 
-    try {
-      await invoke("add_notebook", { title });
-      fetchNotebooks(); // Reload the notebooks list
-    } catch (error) {
-      console.error("Error adding notebook:", error);
-    }
-  };
-
-  // Add a new note to the selected notebook
-  const addNote = async () => {
-    if (!selectedNotebook) return;
-    const title = prompt("Enter note title:");
-    if (!title) return;
-
-    try {
-      await invoke("add_note", {
-        notebook_id: selectedNotebook.id,
-        title,
-        content: "",
-      });
-      selectNotebook(selectedNotebook); // Reload the notes list
-    } catch (error) {
-      console.error("Error adding note:", error);
-    }
-  };
-
-  // Select a note
-  const selectNote = (note) => {
-    setSelectedNote(note);
-  };
-
-  // Edit and save a note
-  const editNote = async (event) => {
-    if (!selectedNote) return;
-
-    const updatedContent = event.target.value;
-    setSelectedNote((prev) => ({ ...prev, content: updatedContent }));
-
-    try {
-      await invoke("update_note", {
-        note_id: selectedNote.id,
-        title: selectedNote.title,
-        content: updatedContent,
-      });
-    } catch (error) {
-      console.error("Error updating note:", error);
-    }
-  };
-
+  // ===========================
+  //     RENDER JSX
+  // ===========================
   return (
     <div className="app-container">
-      {/* Sidebar for Notebooks */}
-      <aside className="sidebar">
-        <h2>Joplin (Tauri)</h2>
-        <button onClick={addNotebook}>+ New Notebook</button>
+      {/* Left column: Notebooks */}
+      <div className="sidebar">
+        <h2>Notebooks</h2>
         <ul>
           {notebooks.map((nb) => (
             <li
               key={nb.id}
-              onClick={() => selectNotebook(nb)}
-              className={selectedNotebook?.id === nb.id ? "active" : ""}
+              onClick={() => fetchNotes(nb.id)}
+              className={nb.id === selectedNotebook ? "active" : ""}
             >
               {nb.title}
             </li>
           ))}
         </ul>
-      </aside>
+      </div>
 
-      {/* Sidebar for Notes */}
-      <aside className="notes-sidebar">
-        <button onClick={addNote} disabled={!selectedNotebook}>
-          + New Note
-        </button>
+      {/* Middle column: Notes */}
+      <div className="notes-sidebar">
+        <h2>Notes</h2>
         <ul>
           {notes.map((note) => (
             <li
               key={note.id}
-              onClick={() => selectNote(note)}
-              className={selectedNote?.id === note.id ? "active" : ""}
+              onClick={() => handleSelectNote(note.id)}
+              className={note.id === selectedNote ? "active" : ""}
             >
               {note.title}
             </li>
           ))}
         </ul>
-      </aside>
+      </div>
 
-      {/* Note Editor */}
-      <main className="editor">
-        <div className="toolbar">
-          <h3>{selectedNote ? selectedNote.title : "No Note Selected"}</h3>
+      {/* Right column: Editor / Content */}
+      <div className="editor">
+        <h2>Note Content</h2>
+        <div style={{ marginTop: "10px" }}>
+          {selectedNoteContent}
         </div>
-
-        <textarea
-          placeholder="Write your note here..."
-          value={selectedNote?.content || ""}
-          onChange={editNote}
-          disabled={!selectedNote}
-        />
-      </main>
+      </div>
     </div>
   );
 }

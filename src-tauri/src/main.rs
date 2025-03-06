@@ -1,22 +1,17 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
-use rusqlite::{params, Connection, Result};
-use serde::{Deserialize, Serialize};
-use std::env;
-use std::path::PathBuf;
-use std::sync::Mutex;
+use rusqlite::{Connection, Result};
+use serde::Serialize;
 use tauri::command;
 
-// Structure for a Notebook
-#[derive(Serialize, Deserialize)]
+// ======================
+// 1. Data Structures
+// ======================
+#[derive(Serialize, Debug)]
 struct Notebook {
     id: i32,
     title: String,
 }
 
-// Structure for a Note
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Debug)]
 struct Note {
     id: i32,
     notebook_id: i32,
@@ -24,132 +19,55 @@ struct Note {
     content: String,
 }
 
-// Mutex for safe database access
-struct Database {
-    conn: Mutex<Connection>,
-}
+// ======================
+// 2. Commands
+// ======================
 
-impl Database {
-    fn new() -> Result<Self> {
-        let db_path = r"C:\Users\aless\OneDrive\Bureau\Tauri-app\notes.db";
-        let conn = Connection::open(db_path)?;
-
-        // Create Notebooks Table
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS notebooks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL
-            )",
-            [],
-        )?;
-
-        // Create Notes Table
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS notes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                notebook_id INTEGER NOT NULL,
-                title TEXT NOT NULL,
-                content TEXT NOT NULL,
-                FOREIGN KEY (notebook_id) REFERENCES notebooks(id) ON DELETE CASCADE
-            )",
-            [],
-        )?;
-
-        Ok(Self {
-            conn: Mutex::new(conn),
-        })
-    }
-}
-
-// Add a new notebook
+/// Fetch all notebooks from the `notebooks` table.
 #[command]
-fn add_notebook(database: tauri::State<Database>, title: String) -> Result<(), String> {
-    let conn = database.conn.lock().unwrap();
-    conn.execute("INSERT INTO notebooks (title) VALUES (?1)", params![title])
+fn get_notebooks() -> Result<Vec<Notebook>, String> {
+    println!("🔍 get_notebooks called");
+
+    // Path to your SQLite database.
+    // If this doesn't work, try an absolute path like:
+    // "C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db"
+    let conn = Connection::open("C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db")
         .map_err(|e| e.to_string())?;
-    Ok(())
-}
 
-// Get all notebooks
-#[command]
-fn get_notebooks(database: tauri::State<Database>) -> Result<Vec<Notebook>, String> {
-    let conn = database.conn.lock().unwrap();
     let mut stmt = conn
         .prepare("SELECT id, title FROM notebooks")
         .map_err(|e| e.to_string())?;
-    let notebooks = stmt
+
+    let notebooks_iter = stmt
         .query_map([], |row| {
             Ok(Notebook {
                 id: row.get(0)?,
                 title: row.get(1)?,
             })
         })
-        .map_err(|e| e.to_string())?
-        .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
+
+    let notebooks: Vec<Notebook> = notebooks_iter.filter_map(Result::ok).collect();
+    println!("✅ Notebooks retrieved: {:?}", notebooks);
+
     Ok(notebooks)
 }
 
-// Delete a notebook and its notes
+/// Fetch notes for a specific notebook.
 #[command]
-fn delete_notebook(database: tauri::State<Database>, notebook_id: i32) -> Result<(), String> {
-    let conn = database.conn.lock().unwrap();
-    conn.execute("DELETE FROM notebooks WHERE id = ?1", params![notebook_id])
+fn get_notes(notebookId: i32) -> Result<Vec<Note>, String> {
+    println!("🔍 get_notes called with notebook_id = {}", notebookId);
+
+    // Same path as above, so we’re sure we're opening the same DB.
+    let conn = Connection::open("C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db")
         .map_err(|e| e.to_string())?;
-    Ok(())
-}
 
-// Add a new note
-#[tauri::command]
-fn add_note(
-    database: tauri::State<Database>,
-    notebook_id: i32,
-    title: String,
-    content: String,
-) -> Result<(), String> {
-    let conn = database.conn.lock().unwrap();
-
-    // Check if the notebook exists before inserting the note
-    let notebook_exists: bool = conn
-        .query_row(
-            "SELECT EXISTS(SELECT 1 FROM notebooks WHERE id = ?1)",
-            params![notebook_id],
-            |row| row.get(0),
-        )
-        .unwrap_or(false);
-
-    if !notebook_exists {
-        return Err(format!("Notebook with ID {} does not exist", notebook_id));
-    }
-
-    // Insert the new note
-    match conn.execute(
-        "INSERT INTO notes (notebook_id, title, content) VALUES (?1, ?2, ?3)",
-        params![notebook_id, title, content],
-    ) {
-        Ok(rows) => {
-            println!(
-                "Note added successfully: {} - {} (Rows affected: {})",
-                title, content, rows
-            );
-            Ok(())
-        }
-        Err(e) => {
-            println!("Error adding note: {}", e);
-            Err(e.to_string())
-        }
-    }
-}
-
-// Get notes for a specific notebook
-#[command]
-fn get_notes(database: tauri::State<Database>, notebook_id: i32) -> Result<Vec<Note>, String> {
-    let conn = database.conn.lock().unwrap();
     let mut stmt = conn
-        .prepare("SELECT id, notebook_id, title, content FROM notes WHERE notebook_id = ?1")
+        .prepare("SELECT id, notebook_id, title, content FROM notes WHERE notebook_id = ?")
         .map_err(|e| e.to_string())?;
-    let notes = stmt
-        .query_map(params![notebook_id], |row| {
+
+    let notes_iter = stmt
+        .query_map([notebookId], |row| {
             Ok(Note {
                 id: row.get(0)?,
                 notebook_id: row.get(1)?,
@@ -157,53 +75,21 @@ fn get_notes(database: tauri::State<Database>, notebook_id: i32) -> Result<Vec<N
                 content: row.get(3)?,
             })
         })
-        .map_err(|e| e.to_string())?
-        .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
+
+    let notes: Vec<Note> = notes_iter.filter_map(Result::ok).collect();
+    println!("✅ Notes retrieved: {:?}", notes);
+
     Ok(notes)
 }
 
-// Update a note
-#[command]
-fn update_note(
-    database: tauri::State<Database>,
-    note_id: i32,
-    title: String,
-    content: String,
-) -> Result<(), String> {
-    let conn = database.conn.lock().unwrap();
-    conn.execute(
-        "UPDATE notes SET title = ?1, content = ?2 WHERE id = ?3",
-        params![title, content, note_id],
-    )
-    .map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-// Delete a note
-#[command]
-fn delete_note(database: tauri::State<Database>, note_id: i32) -> Result<(), String> {
-    let conn = database.conn.lock().unwrap();
-    conn.execute("DELETE FROM notes WHERE id = ?1", params![note_id])
-        .map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-// Initialize database and Tauri app
+// ======================
+// 3. The main function
+// ======================
 fn main() {
-    let database = Database::new().expect("Failed to initialize database");
-
     tauri::Builder::default()
-        .manage(database)
-        .invoke_handler(tauri::generate_handler![
-            add_notebook,
-            get_notebooks,
-            delete_notebook,
-            add_note,
-            get_notes,
-            update_note,
-            delete_note
-        ])
+        // Register these commands so we can call them from React
+        .invoke_handler(tauri::generate_handler![get_notebooks, get_notes])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("error while running Tauri application");
 }
