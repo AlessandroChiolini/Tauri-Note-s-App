@@ -11,4 +11,5 @@ export const updateNoteContent = (noteId, newContent) =>
   invoke("update_note_content", { noteId, newContent });
 export const updateNoteTitle = (noteId, newTitle) =>
   invoke("update_note_title", { noteId, newTitle });
-export const deleteNote = (noteId) => invoke("delete_note", { noteId });
+export const deleteNotebook = (notebookId) =>
+  invoke("delete_notebook", { notebookId });

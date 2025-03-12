@@ -7,7 +7,7 @@ import {
   createNote,
   updateNoteContent as updateNoteContentAPI,
   updateNoteTitle as updateNoteTitleAPI,
-  deleteNote as deleteNoteAPI,
+  deleteNotebook as deleteNotebookAPI,
 } from "../services/api";
 
 export function useNotebooks() {
@@ -71,7 +71,7 @@ export function useNotebooks() {
     }
   };
 
-  // New function: createEmptyNote to create a new note with an empty title
+  // New function to create an empty note
   const createEmptyNote = async () => {
     if (!selectedNotebook) return;
     try {
@@ -124,21 +124,22 @@ export function useNotebooks() {
     }
   };
 
-  // New delete function
-  const deleteNote = async (noteId) => {
+  // New delete function for a notebook
+  const deleteNotebook = async (notebookId) => {
     try {
-      await deleteNoteAPI(noteId);
-      setAllNotes((prev) => prev.filter((note) => note.id !== noteId));
-      setNotes((prev) => prev.filter((note) => note.id !== noteId));
-      if (selectedNote === noteId) {
-        setSelectedNote(null);
+      await deleteNotebookAPI(notebookId);
+      setNotebooks((prev) => prev.filter((nb) => nb.id !== notebookId));
+      // If the deleted notebook was selected, clear selection and notes.
+      if (selectedNotebook === notebookId) {
+        setSelectedNotebook(null);
+        setNotes([]);
+        setAllNotes([]);
       }
     } catch (error) {
-      console.error("Error deleting note:", error);
+      console.error("Error deleting notebook:", error);
     }
   };
 
-  // Modal control for creating a note
   const openCreateNoteModal = () => {
     setShowCreateNoteModal(true);
   };
@@ -147,7 +148,6 @@ export function useNotebooks() {
     setShowCreateNoteModal(false);
   };
 
-  // Sorting notes by title (toggling order)
   const sortNotes = () => {
     const sortedNotes = [...notes].sort((a, b) => {
       if (sortAscending) {
@@ -160,7 +160,6 @@ export function useNotebooks() {
     setSortAscending(!sortAscending);
   };
 
-  // Search notes by title using the allNotes list
   const searchNotes = (query) => {
     setSearchQuery(query);
     if (!query) {
@@ -187,10 +186,10 @@ export function useNotebooks() {
     selectNote,
     addNotebook,
     addNote,
-    createEmptyNote, // added here
+    createEmptyNote,
     updateNoteContent,
     updateNoteTitle,
-    deleteNote,      // added here
+    deleteNotebook, // added here
     openCreateNoteModal,
     closeCreateNoteModal,
     sortNotes,
