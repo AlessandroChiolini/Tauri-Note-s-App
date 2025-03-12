@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Custom gutter style for react-split */
+.gutter {
+    background-color: #616161;
+    background-repeat: no-repeat;
+    background-position: 50%;
+  }
+  
+  .gutter.gutter-horizontal {
+    cursor: col-resize;
+    width: 4px;
+  }
