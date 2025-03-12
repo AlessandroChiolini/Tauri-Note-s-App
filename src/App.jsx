@@ -7,7 +7,7 @@ import "./App.css";
 
 function App() {
   return (
-    <div className="app-container">
+    <div className="flex h-screen">
       <NotebookList />
       <NoteList />
       <NoteEditor />

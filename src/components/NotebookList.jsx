@@ -8,15 +8,22 @@ const NotebookList = () => {
   const [showForm, setShowForm] = useState(false);
 
   return (
-    <div className="sidebar">
-      <h2>Notebooks</h2>
-      <button onClick={() => setShowForm(!showForm)}>
+    <div className="w-56 bg-gray-800 text-white p-4 flex flex-col">
+      <h2 className="text-xl mb-4">Notebooks</h2>
+      <button 
+        onClick={() => setShowForm(!showForm)}
+        className="mb-4 bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
+      >
         {showForm ? "Annuler" : "+ Ajouter Notebook"}
       </button>
       {showForm && <CreateNotebookForm />}
-      <ul>
+      <ul className="space-y-2">
         {notebooks.map((nb) => (
-          <li key={nb.id} onClick={() => selectNotebook(nb.id)}>
+          <li 
+            key={nb.id} 
+            onClick={() => selectNotebook(nb.id)}
+            className="cursor-pointer px-2 py-1 hover:bg-gray-700 rounded"
+          >
             {nb.title}
           </li>
         ))}
