@@ -3,29 +3,36 @@ import React, { useState } from "react";
 import { useAppContext } from "../contexts/AppContext";
 
 const CreateNoteForm = () => {
-  const { selectedNotebook, addNote } = useAppContext();
+  const { addNote, closeCreateNoteModal } = useAppContext();
   const [title, setTitle] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-    addNote(title);
-    setTitle("");
+  const handleBlur = () => {
+    if (title.trim() !== "") {
+      addNote(title);
+    }
+    closeCreateNoteModal && closeCreateNoteModal();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (title.trim() !== "") {
+        addNote(title);
+      }
+      closeCreateNoteModal && closeCreateNoteModal();
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex space-x-2 mb-4">
-      <input
-        type="text"
-        placeholder="Titre de la note"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring focus:border-green-300"
-      />
-      <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">
-        Créer
-      </button>
-    </form>
+    <input
+      type="text"
+      placeholder="Titre de la note"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring focus:border-green-300 mb-2"
+      autoFocus
+    />
   );
 };
 

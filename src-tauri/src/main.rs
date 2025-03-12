@@ -1,8 +1,8 @@
+use dotenv::dotenv;
 use rusqlite::{Connection, Result};
 use serde::Serialize;
-use tauri::command;
-use dotenv::dotenv;
 use std::env;
+use tauri::command;
 use uuid::Uuid;
 
 // ======================
@@ -23,11 +23,9 @@ struct Note {
     content: String,
 }
 
-
 // ======================
 // 2. Commands
 // ======================
-
 
 // ======== FONCTION POUR CONNEXION DB ========
 fn establish_connection() -> Result<Connection, String> {
@@ -138,6 +136,22 @@ fn update_note_content(note_id: String, new_content: String) -> Result<(), Strin
     }
 }
 
+#[command]
+fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
+    let conn = establish_connection()?;
+    let affected_rows = conn
+        .execute(
+            "UPDATE notes SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (&new_title, &note_id),
+        )
+        .map_err(|e| e.to_string())?;
+    if affected_rows == 0 {
+        Err(format!("Aucune note trouvée avec l'id : {}", note_id))
+    } else {
+        Ok(())
+    }
+}
+
 #[tauri::command]
 fn initialize_db() -> Result<(), String> {
     let conn = establish_connection()?;
@@ -165,7 +179,6 @@ fn initialize_db() -> Result<(), String> {
     Ok(())
 }
 
-
 // ======================
 // 3. The main function
 // ======================
@@ -174,13 +187,14 @@ fn main() {
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            initialize_db, // <-- ajoute cette ligne ici !
+            initialize_db,
             create_notebook,
             create_note,
             get_notebooks,
             get_notes,
-            update_note_content
+            update_note_content,
+            update_note_title
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Tauri application");
+        .expect("error while running tauri application");
 }

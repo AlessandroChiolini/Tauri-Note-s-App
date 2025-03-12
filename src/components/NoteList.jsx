@@ -1,16 +1,15 @@
 // src/components/NoteList.jsx
-import React, { useState } from "react";
+import React from "react";
 import { useAppContext } from "../contexts/AppContext";
-import CreateNoteForm from "./CreateNoteForm";
+import NoteListHeader from "./NoteListHeader";
 
 const NoteList = () => {
   const { notes, selectedNote, selectNote } = useAppContext();
-  const [showForm, setShowForm] = useState(false);
 
   return (
-    <div className="w-56 bg-gray-700 text-white flex flex-col">
-      {showForm && <CreateNoteForm />}
-      <ul className="space-y-2">
+    <div className="flex-1 bg-gray-700 text-white flex flex-col min-w-[200px]">
+      <NoteListHeader />
+      <ul className="space-y-2 overflow-y-auto">
         {notes.map((note) => (
           <li
             key={note.id}
@@ -19,7 +18,7 @@ const NoteList = () => {
               note.id === selectedNote ? "bg-gray-500 text-white" : ""
             }`}
           >
-            {note.title}
+            {note.title || "(Sans titre)"}
           </li>
         ))}
       </ul>
