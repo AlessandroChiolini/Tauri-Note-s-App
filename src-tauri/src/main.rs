@@ -152,6 +152,20 @@ fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
     }
 }
 
+#[command]
+fn delete_note(note_id: String) -> Result<(), String> {
+    let conn = establish_connection()?;
+    let affected_rows = conn
+        .execute("DELETE FROM notes WHERE id = ?", [&note_id])
+        .map_err(|e| e.to_string())?;
+    if affected_rows == 0 {
+        Err(format!("No note found with id: {}", note_id))
+    } else {
+        Ok(())
+    }
+}
+
+
 #[tauri::command]
 fn initialize_db() -> Result<(), String> {
     let conn = establish_connection()?;
@@ -193,7 +207,8 @@ fn main() {
             get_notebooks,
             get_notes,
             update_note_content,
-            update_note_title
+            update_note_title,
+            delete_note
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

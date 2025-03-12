@@ -7,6 +7,7 @@ import {
   createNote,
   updateNoteContent as updateNoteContentAPI,
   updateNoteTitle as updateNoteTitleAPI,
+  deleteNote as deleteNoteAPI,
 } from "../services/api";
 
 export function useNotebooks() {
@@ -28,7 +29,6 @@ export function useNotebooks() {
     }
   };
 
-  // Modified fetchNotes accepts an optional parameter 'clearSelection'
   const fetchNotes = async (notebookId, clearSelection = true) => {
     setSelectedNotebook(notebookId);
     if (clearSelection) {
@@ -60,7 +60,6 @@ export function useNotebooks() {
     }
   };
 
-  // addNote is used for creating a note when a title is already provided
   const addNote = async (title) => {
     if (!selectedNotebook) return;
     try {
@@ -72,14 +71,12 @@ export function useNotebooks() {
     }
   };
 
-  // New function: createEmptyNote creates a note with an empty title,
-  // then re-fetches notes without clearing the selection, and finally selects the new note.
+  // New function: createEmptyNote to create a new note with an empty title
   const createEmptyNote = async () => {
     if (!selectedNotebook) return;
     try {
       const newNote = await createNote(selectedNotebook, "");
       setShowCreateNoteModal(false);
-      // fetch notes without clearing the selected note
       await fetchNotes(selectedNotebook, false);
       setSelectedNote(newNote.id);
     } catch (error) {
@@ -127,7 +124,21 @@ export function useNotebooks() {
     }
   };
 
-  // Modal control for creating a note (if needed)
+  // New delete function
+  const deleteNote = async (noteId) => {
+    try {
+      await deleteNoteAPI(noteId);
+      setAllNotes((prev) => prev.filter((note) => note.id !== noteId));
+      setNotes((prev) => prev.filter((note) => note.id !== noteId));
+      if (selectedNote === noteId) {
+        setSelectedNote(null);
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  };
+
+  // Modal control for creating a note
   const openCreateNoteModal = () => {
     setShowCreateNoteModal(true);
   };
@@ -179,6 +190,7 @@ export function useNotebooks() {
     createEmptyNote, // added here
     updateNoteContent,
     updateNoteTitle,
+    deleteNote,      // added here
     openCreateNoteModal,
     closeCreateNoteModal,
     sortNotes,
