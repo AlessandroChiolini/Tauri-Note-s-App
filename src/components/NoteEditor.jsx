@@ -1,5 +1,5 @@
 // src/components/NoteEditor.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAppContext } from "../contexts/AppContext";
 
 const NoteEditor = () => {
@@ -9,6 +9,7 @@ const NoteEditor = () => {
   // Local state for content and title
   const [content, setContent] = useState(noteObj.content || "");
   const [title, setTitle] = useState(noteObj.title || "");
+  const titleInputRef = useRef(null);
 
   // Update local state when the selected note changes
   useEffect(() => {
@@ -25,7 +26,7 @@ const NoteEditor = () => {
     return () => clearTimeout(timeoutId);
   }, [content, selectedNote, updateNoteContent]);
 
-  // Debounce auto-save for note title continuously
+  // Debounce auto-save for note title
   useEffect(() => {
     if (!selectedNote) return;
     const timeoutId = setTimeout(() => {
@@ -34,17 +35,24 @@ const NoteEditor = () => {
     return () => clearTimeout(timeoutId);
   }, [title, selectedNote, updateNoteTitle]);
 
+  // Automatically focus the title input if the title is empty
+  useEffect(() => {
+    if (selectedNote && title.trim() === "" && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [selectedNote, title]);
+
   return (
     <div className="flex-1 p-4 flex flex-col bg-gray-800">
       {selectedNote ? (
         <>
           <input
+            ref={titleInputRef}
             type="text"
             placeholder="Titre de la note"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="mb-4 p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-300 text-white"
-            autoFocus
           />
           <textarea
             value={content}

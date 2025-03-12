@@ -28,13 +28,15 @@ export function useNotebooks() {
     }
   };
 
-  const fetchNotes = async (notebookId) => {
+  // Modified fetchNotes accepts an optional parameter 'clearSelection'
+  const fetchNotes = async (notebookId, clearSelection = true) => {
     setSelectedNotebook(notebookId);
-    setSelectedNote(null);
+    if (clearSelection) {
+      setSelectedNote(null);
+    }
     try {
       const data = await getNotes(notebookId);
       setAllNotes(data);
-      // Apply any active search query if present
       if (searchQuery) {
         setNotes(
           data.filter((note) =>
@@ -58,6 +60,7 @@ export function useNotebooks() {
     }
   };
 
+  // addNote is used for creating a note when a title is already provided
   const addNote = async (title) => {
     if (!selectedNotebook) return;
     try {
@@ -69,6 +72,21 @@ export function useNotebooks() {
     }
   };
 
+  // New function: createEmptyNote creates a note with an empty title,
+  // then re-fetches notes without clearing the selection, and finally selects the new note.
+  const createEmptyNote = async () => {
+    if (!selectedNotebook) return;
+    try {
+      const newNote = await createNote(selectedNotebook, "");
+      setShowCreateNoteModal(false);
+      // fetch notes without clearing the selected note
+      await fetchNotes(selectedNotebook, false);
+      setSelectedNote(newNote.id);
+    } catch (error) {
+      console.error("Error creating empty note:", error);
+    }
+  };
+
   const selectNote = (noteId) => {
     setSelectedNote(noteId);
   };
@@ -76,7 +94,6 @@ export function useNotebooks() {
   const updateNoteTitle = async (noteId, newTitle) => {
     try {
       await updateNoteTitleAPI(noteId, newTitle);
-      // Update the local allNotes list
       setAllNotes((prevNotes) =>
         prevNotes.map((note) =>
           note.id === noteId ? { ...note, title: newTitle } : note
@@ -110,7 +127,7 @@ export function useNotebooks() {
     }
   };
 
-  // Modal control for creating a note
+  // Modal control for creating a note (if needed)
   const openCreateNoteModal = () => {
     setShowCreateNoteModal(true);
   };
@@ -159,6 +176,7 @@ export function useNotebooks() {
     selectNote,
     addNotebook,
     addNote,
+    createEmptyNote, // added here
     updateNoteContent,
     updateNoteTitle,
     openCreateNoteModal,
