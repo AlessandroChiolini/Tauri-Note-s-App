@@ -2,12 +2,66 @@
 
 /* Custom gutter style for react-split */
 .gutter {
-    background-color: #616161;
-    background-repeat: no-repeat;
-    background-position: 50%;
-  }
-  
-  .gutter.gutter-horizontal {
-    cursor: col-resize;
-    width: 4px;
-  }
+  background-color: #616161;
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+  cursor: col-resize;
+  width: 4px;
+}
+
+div.react-mde {
+  height: 100%;
+  color: white;
+  border: 0 !important;
+}
+
+div.mde-header {
+  background-color: #364153;
+  border: 0;
+}
+
+div.mde-tabs button:hover {
+  background-color: #2B7FFF;
+}
+
+div.mde-tabs button.selected {
+  background-color: #2B7FFF;
+}
+
+.mde-header ul.mde-header-group li.mde-header-item button {
+  color: white !important;
+}
+
+.mde-header ul.mde-header-group li.mde-header-item button:hover {
+  color: #2B7FFF !important;
+}
+
+.mde-header .mde-tabs button.selected {
+  border: 0;
+}
+
+div.react-mde div:nth-child(2) {
+  height: 100%;
+}
+
+.mde-text,
+.mde-textarea-wrapper {
+  height: 100% !important;
+}
+
+.mde-text:focus  {
+  border: 0 !important;
+  outline: 0 !important;
+}
+
+div.react-mde ul {
+  list-style-type: disc;
+}
+
+div.react-mde ol {
+  list-style-type: decimal;
+}
+

@@ -15,7 +15,9 @@
     "@tauri-apps/plugin-opener": "^2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-mde": "^11.5.0",
     "react-split": "^2.0.14",
+    "showdown": "^2.1.0",
     "tailwindcss": "^4.0.13"
   },
   "devDependencies": {
