@@ -1,83 +1,81 @@
 use rusqlite::{Connection, Result};
 use serde::Serialize;
 use tauri::command;
+use dotenv::dotenv;
+use std::env;
+use uuid::Uuid;
 
 // ======================
 // 1. Data Structures
 // ======================
-#[derive(Serialize, Debug)]
+// ======== STRUCTURES ==========
+#[derive(Serialize)]
 struct Notebook {
-    id: i32,
+    id: String,
     title: String,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize)]
 struct Note {
-    id: i32,
-    notebook_id: i32,
+    id: String,
+    notebook_id: String,
     title: String,
     content: String,
 }
+
 
 // ======================
 // 2. Commands
 // ======================
 
-#[command]
-fn create_notebook(title: String) -> Result<Notebook, String> {
-    println!("🔨 create_notebook called with title = {}", title);
 
-    let conn = Connection::open("C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db")
-        .map_err(|e| e.to_string())?;
+// ======== FONCTION POUR CONNEXION DB ========
+fn establish_connection() -> Result<Connection, String> {
+    dotenv().ok(); // Charge automatiquement les variables d'environnement
 
-    // Insert a new row into the `notebooks` table
-    conn.execute("INSERT INTO notebooks (title) VALUES (?)", [title.as_str()])
-        .map_err(|e| e.to_string())?;
+    let database_url = env::var("DATABASE_URL")
+        .map_err(|_| "DATABASE_URL doit être définie dans le fichier .env".to_string())?;
 
-    // Get the newly inserted row's ID
-    let row_id = conn.last_insert_rowid();
-
-    // Return the newly created Notebook
-    Ok(Notebook {
-        id: row_id as i32,
-        title,
-    })
+    Connection::open(database_url).map_err(|e| e.to_string())
 }
 
 #[command]
-fn create_note(notebookId: i32, title: String) -> Result<Note, String> {
-    let conn = Connection::open("C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db")
-        .map_err(|e| e.to_string())?;
+fn create_notebook(title: String) -> Result<Notebook, String> {
+    let conn = establish_connection()?;
+    let id = Uuid::new_v4().to_string();
 
-    // On insère un contenu vide par défaut
-    let default_content = "";
     conn.execute(
-        "INSERT INTO notes (notebook_id, title, content) VALUES (?, ?, ?)",
-        (notebookId, title.as_str(), default_content),
+        "INSERT INTO notebooks (id, title) VALUES (?, ?)",
+        (&id, &title),
     )
     .map_err(|e| e.to_string())?;
 
-    let row_id = conn.last_insert_rowid();
+    Ok(Notebook { id, title })
+}
 
-    // On renvoie quand même la note (avec contenu vide)
+#[command]
+fn create_note(notebook_id: String, title: String) -> Result<Note, String> {
+    let conn = establish_connection()?;
+    let id = Uuid::new_v4().to_string();
+
+    conn.execute(
+        "INSERT INTO notes (id, notebook_id, title, content) VALUES (?, ?, ?, ?)",
+        (&id, &notebook_id, &title, ""),
+    )
+    .map_err(|e| e.to_string())?;
+
     Ok(Note {
-        id: row_id as i32,
-        notebook_id: notebookId,
+        id,
+        notebook_id,
         title,
-        content: String::from(default_content),
+        content: String::new(),
     })
 }
 
 /// Fetch all notebooks from the `notebooks` table.
 #[command]
-fn get_notebooks() -> Result<Vec<Notebook>, String> {
-    println!("🔍 get_notebooks called");
-
-    // Path to your SQLite database.
-    // If this doesn't work, try an absolute path like:
-    // "C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db"
-    let conn = Connection::open("C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db")
-        .map_err(|e| e.to_string())?;
+fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
+    let conn = establish_connection()?;
 
     let mut stmt = conn
         .prepare("SELECT id, title FROM notebooks")
@@ -93,26 +91,21 @@ fn get_notebooks() -> Result<Vec<Notebook>, String> {
         .map_err(|e| e.to_string())?;
 
     let notebooks: Vec<Notebook> = notebooks_iter.filter_map(Result::ok).collect();
-    println!("✅ Notebooks retrieved: {:?}", notebooks);
 
     Ok(notebooks)
 }
 
 /// Fetch notes for a specific notebook.
 #[command]
-fn get_notes(notebookId: i32) -> Result<Vec<Note>, String> {
-    println!("🔍 get_notes called with notebook_id = {}", notebookId);
-
-    // Same path as above, so we’re sure we're opening the same DB.
-    let conn = Connection::open("C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db")
-        .map_err(|e| e.to_string())?;
+fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
+    let conn = establish_connection()?;
 
     let mut stmt = conn
         .prepare("SELECT id, notebook_id, title, content FROM notes WHERE notebook_id = ?")
         .map_err(|e| e.to_string())?;
 
     let notes_iter = stmt
-        .query_map([notebookId], |row| {
+        .query_map([notebook_id], |row| {
             Ok(Note {
                 id: row.get(0)?,
                 notebook_id: row.get(1)?,
@@ -123,49 +116,69 @@ fn get_notes(notebookId: i32) -> Result<Vec<Note>, String> {
         .map_err(|e| e.to_string())?;
 
     let notes: Vec<Note> = notes_iter.filter_map(Result::ok).collect();
-    println!("✅ Notes retrieved: {:?}", notes);
 
     Ok(notes)
 }
 
 #[command]
-fn update_note_content(noteId: i32, newContent: String) -> Result<(), String> {
-    println!(
-        "✏️ update_note_content called for noteId = {}, newContent = {}",
-        noteId, newContent
-    );
-
-    let conn = Connection::open("C:/Users/aless/OneDrive/Bureau/Tauri-app/notes.db")
-        .map_err(|e| e.to_string())?;
+fn update_note_content(note_id: String, new_content: String) -> Result<(), String> {
+    let conn = establish_connection()?;
 
     let affected_rows = conn
         .execute(
-            "UPDATE notes SET content = ? WHERE id = ?",
-            (newContent.as_str(), noteId),
+            "UPDATE notes SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (&new_content, &note_id),
         )
         .map_err(|e| e.to_string())?;
 
-    println!("Affected rows: {}", affected_rows);
-
     if affected_rows == 0 {
-        Err(format!("No note found with id {}", noteId))
+        Err(format!("Aucune note trouvée avec l'id : {}", note_id))
     } else {
-        println!("✅ Note updated successfully. New content overrides the old one.");
         Ok(())
     }
 }
+
+#[tauri::command]
+fn initialize_db() -> Result<(), String> {
+    let conn = establish_connection()?;
+
+    conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS notebooks (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS notes (
+            id TEXT PRIMARY KEY,
+            notebook_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT DEFAULT '',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(notebook_id) REFERENCES notebooks(id) ON DELETE CASCADE
+        );
+        ",
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 
 // ======================
 // 3. The main function
 // ======================
 fn main() {
+    dotenv().ok();
+
     tauri::Builder::default()
-        // Register these commands so we can call them from React
         .invoke_handler(tauri::generate_handler![
-            get_notebooks,
-            get_notes,
+            initialize_db, // <-- ajoute cette ligne ici !
             create_notebook,
             create_note,
+            get_notebooks,
+            get_notes,
             update_note_content
         ])
         .run(tauri::generate_context!())
