@@ -62,7 +62,9 @@ const NoteEditor = () => {
           />
         </>
       ) : (
-        <p className="text-white">Sélectionne une note</p>
+        <div className="flex-1 flex items-center justify-center text-white">
+          Sélectionnez une note pour commencer
+        </div>
       )}
     </div>
   );

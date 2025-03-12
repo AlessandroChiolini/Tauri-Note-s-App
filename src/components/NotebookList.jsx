@@ -4,7 +4,7 @@ import { useAppContext } from "../contexts/AppContext";
 import CreateNotebookForm from "./CreateNotebookForm";
 
 const NotebookList = () => {
-  const { notebooks, selectNotebook } = useAppContext();
+  const { notebooks, selectedNotebook, selectNotebook } = useAppContext();
   const [showForm, setShowForm] = useState(false);
 
   return (
@@ -22,7 +22,9 @@ const NotebookList = () => {
           <li 
             key={nb.id} 
             onClick={() => selectNotebook(nb.id)}
-            className="cursor-pointer px-2 py-1 hover:bg-gray-700 rounded"
+            className={`cursor-pointer px-2 py-1 hover:bg-gray-700 rounded ${
+              nb.id === selectedNotebook ? "bg-gray-600 font-bold" : ""
+            }`}
           >
             {nb.title}
           </li>

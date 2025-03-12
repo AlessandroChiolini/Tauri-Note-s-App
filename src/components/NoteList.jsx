@@ -14,7 +14,7 @@ const NoteList = () => {
           <li
             key={note.id}
             onClick={() => selectNote(note.id)}
-            className={`cursor-pointer px-2 py-1 hover:bg-gray-600 ${
+            className={`cursor-pointer px-2 py-1 hover:bg-gray-600 border-b border-gray-600 last:border-0 ${
               note.id === selectedNote ? "bg-gray-500 text-white" : ""
             }`}
           >
