@@ -74,7 +74,7 @@ fn create_note(notebook_id: String, title: String) -> Result<Note, String> {
 
 /// Fetch all notebooks from the `notebooks` table.
 #[command]
-fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
+fn get_notebooks() -> Result<Vec<Notebook>, String> {
     let conn = establish_connection()?;
 
     let mut stmt = conn
