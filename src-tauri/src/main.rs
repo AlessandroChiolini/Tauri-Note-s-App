@@ -21,6 +21,8 @@ struct Note {
     notebook_id: String,
     title: String,
     content: String,
+    created_at: String,
+    updated_at: String
 }
 
 // ======================
@@ -66,7 +68,9 @@ fn create_note(notebook_id: String, title: String) -> Result<Note, String> {
         id,
         notebook_id,
         title,
-        content: String::new(),
+        content:    String::new(),
+        created_at: String::new(),
+        updated_at: String::new()
     })
 }
 
@@ -99,7 +103,7 @@ fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
     let conn = establish_connection()?;
 
     let mut stmt = conn
-        .prepare("SELECT id, notebook_id, title, content FROM notes WHERE notebook_id = ?")
+        .prepare("SELECT id, notebook_id, title, content, created_at, updated_at FROM notes WHERE notebook_id = ?")
         .map_err(|e| e.to_string())?;
 
     let notes_iter = stmt
@@ -109,6 +113,8 @@ fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
                 notebook_id: row.get(1)?,
                 title: row.get(2)?,
                 content: row.get(3)?,
+                created_at: row.get(4)?,
+                updated_at: row.get(5)?
             })
         })
         .map_err(|e| e.to_string())?;

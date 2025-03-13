@@ -4,6 +4,7 @@ import ReactMde from "react-mde";
 import * as Showdown from "showdown";
 import "react-mde/lib/styles/css/react-mde-all.css";
 import { useAppContext } from "../contexts/AppContext";
+import NoteInfoBtn from "./NoteInfoBtn";
 
 const NoteEditor = () => {
   const { selectedNote, notes, updateNoteContent, updateNoteTitle } =
@@ -59,6 +60,13 @@ const NoteEditor = () => {
             className="mb-4 p-2 rounded focus:outline-none focus:ring focus:border-blue-300 text-white"
             autoFocus
           />
+        <NoteInfoBtn
+            title="Infos de la note"
+            content={`ID: ${noteObj.id}\n📅 Créé : ${noteObj.created_at || "N/A"}\n✏️ Mis à jour : ${noteObj.updated_at || "N/A"}`}
+            triggerText="🛈 Détails"
+        />
+
+
           {/* Wrap the editor in a container that fills remaining height */}
           <div className="flex-1 min-h-0 h-full overflow-y-auto">
             <ReactMde
