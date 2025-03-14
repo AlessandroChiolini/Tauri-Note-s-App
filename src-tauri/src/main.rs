@@ -3,6 +3,7 @@ use rusqlite::{Connection, Result};
 use serde::Serialize;
 use std::env;
 use tauri::command;
+use tauri::menu::{MenuBuilder, SubmenuBuilder};
 use uuid::Uuid;
 
 // ======================
@@ -216,10 +217,61 @@ fn initialize_db() -> Result<(), String> {
 // ======================
 // 3. The main function
 // ======================
+
 fn main() {
     dotenv().ok();
 
     tauri::Builder::default()
+        
+        
+        //MENU BAR Tauri v2: https://v2.tauri.app/learn/window-menu/
+        .setup(|app| {
+            let menu = MenuBuilder::new(app)
+                .items(&[
+                    &SubmenuBuilder::new(app, "File")
+                        .quit()
+                        .build()?,
+                    &SubmenuBuilder::new(app, "Edit")
+                        .undo().redo()
+                        .separator()
+                        .copy().paste().cut().select_all()
+                        .separator()
+                        .build()?,
+                    &SubmenuBuilder::new(app, "View")
+                        .text("settings", "Preferences")
+                        .build()?,
+                    &SubmenuBuilder::new(app, "Window")
+                        .minimize()
+                        .maximize()
+                        .build()?,
+                    &SubmenuBuilder::new(app, "Help")
+                        .text("source", "Github")
+                        .build()?,
+                ])
+                .build()?;
+            app.handle().set_menu(menu)?;
+
+            app.on_menu_event(move |_app_handle: &tauri::AppHandle, event| {
+
+                println!("menu event: {:?}", event.id());
+
+                match event.id().0.as_str() {
+                    "settings" => {
+                        println!("custom events");
+                    }
+                    "source" => {
+                        println!("custom events");
+                    }
+                    _ => {
+                        println!("unexpected menu event");
+                    }
+                }
+            });
+            Ok(())
+        })
+
+
+        // INVOKE HANDLER
         .invoke_handler(tauri::generate_handler![
             initialize_db,
             create_notebook,
