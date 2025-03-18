@@ -8,6 +8,7 @@ import {
   updateNoteContent as updateNoteContentAPI,
   updateNoteTitle as updateNoteTitleAPI,
   deleteNotebook as deleteNotebookAPI,
+  deleteNote as deleteNoteAPI
 } from "../services/api";
 
 export function useNotebooks() {
@@ -176,6 +177,12 @@ export function useNotebooks() {
     fetchNotebooks();
   }, []);
 
+
+  const deleteNote = async (noteId) => {
+    await deleteNoteAPI(noteId);
+    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+  };
+
   return {
     notebooks,
     notes,
@@ -194,5 +201,6 @@ export function useNotebooks() {
     closeCreateNoteModal,
     sortNotes,
     searchNotes,
+    deleteNote
   };
 }

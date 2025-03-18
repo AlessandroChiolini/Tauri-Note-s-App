@@ -104,7 +104,7 @@ fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
     let conn = establish_connection()?;
 
     let mut stmt = conn
-        .prepare("SELECT id, notebook_id, title, content, created_at, updated_at FROM notes WHERE notebook_id = ?")
+        .prepare("SELECT id, notebook_id, title, content, created_at, updated_at FROM notes WHERE notebook_id = ? AND deleted = FALSE")
         .map_err(|e| e.to_string())?;
 
     let notes_iter = stmt
@@ -159,8 +159,23 @@ fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
     }
 }
 
-#[command]
+
+#[command]  //Mettre une note à la corbeille
 fn delete_note(note_id: String) -> Result<(), String> {
+    println!("HEA");
+    let conn = establish_connection()?;
+    let affected_rows = conn
+        .execute("UPDATE notes SET deleted = TRUE WHERE id = ?", [&note_id])
+        .map_err(|e| e.to_string())?;
+    if affected_rows == 0 {
+        Err(format!("No note found with id: {}", note_id))
+    } else {
+        Ok(())
+    }
+}
+
+#[command]  // Supprimer les éléments de la corbeille
+fn permanently_delete_note(note_id: String) -> Result<(), String> {
     let conn = establish_connection()?;
     let affected_rows = conn
         .execute("DELETE FROM notes WHERE id = ?", [&note_id])
@@ -171,6 +186,33 @@ fn delete_note(note_id: String) -> Result<(), String> {
         Ok(())
     }
 }
+
+#[command]  // Afficher les notes supprimées
+fn get_deleted_notes() -> Result<Vec<Note>, String> {
+    let conn = establish_connection()?;
+
+    let mut stmt = conn
+        .prepare("SELECT id, notebook_id, title, content, created_at, updated_at FROM notes WHERE deleted = TRUE")
+        .map_err(|e| e.to_string())?;
+
+    let notes_iter = stmt
+        .query_map([], |row| {
+            Ok(Note {
+                id: row.get(0)?,
+                notebook_id: row.get(1)?,
+                title: row.get(2)?,
+                content: row.get(3)?,
+                created_at: row.get(4)?,
+                updated_at: row.get(5)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let notes: Vec<Note> = notes_iter.filter_map(Result::ok).collect();
+
+    Ok(notes)
+}
+
 
 #[command]
 fn delete_notebook(notebook_id: String) -> Result<(), String> {
@@ -205,6 +247,7 @@ fn initialize_db() -> Result<(), String> {
             content TEXT DEFAULT '',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            deleted BOOLEAN DEFAULT FALSE,
             FOREIGN KEY(notebook_id) REFERENCES notebooks(id) ON DELETE CASCADE
         );
         ",
@@ -281,6 +324,8 @@ fn main() {
             update_note_content,
             update_note_title,
             delete_note,
+            get_deleted_notes,
+            permanently_delete_note,
             delete_notebook
         ])
         .run(tauri::generate_context!())
