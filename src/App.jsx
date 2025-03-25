@@ -1,29 +1,40 @@
-// src/App.jsx
 import React from "react";
 import Split from "react-split";
 import NotebookList from "./components/NotebookList";
 import NoteList from "./components/NoteList";
 import NoteEditor from "./components/NoteEditor";
+import Clock from "./components/Clock";
 import "./App.css";
 
 function App() {
   return (
-    <Split
-      className="flex h-screen"
-      sizes={[15, 25, 60]}       // Initial percentages for each pane
-      minSize={100}             // Minimum pixel width for each pane
-      gutterSize={4}            // Gutter (resizer) size in pixels
-      expandToMin={false}
-      gutterAlign="center"
-      snapOffset={30}
-      dragInterval={1}
-      direction="horizontal"    // Horizontal split
-      cursor="col-resize"
-    >
-      <NotebookList />
-      <NoteList />
-      <NoteEditor />
-    </Split>
+    <div className="h-screen flex flex-col">
+      {/* En-tête fixe */}
+      <div className="bg-gray-900 p-3 flex justify-between items-center border-b border-gray-700 fixed top-0 left-0 right-0 z-50">
+        <h1 className="text-white text-xl font-bold">Notes App</h1>
+        <Clock />
+      </div>
+      
+      {/* Contenu principal avec un padding en haut pour éviter le chevauchement */}
+      <div className="pt-16 flex flex-1">
+        <Split
+          className="flex flex-1"
+          sizes={[15, 25, 60]}
+          minSize={100}
+          gutterSize={4}
+          expandToMin={false}
+          gutterAlign="center"
+          snapOffset={30}
+          dragInterval={1}
+          direction="horizontal"
+          cursor="col-resize"
+        >
+          <NotebookList />
+          <NoteList />
+          <NoteEditor />
+        </Split>
+      </div>
+    </div>
   );
 }
 
