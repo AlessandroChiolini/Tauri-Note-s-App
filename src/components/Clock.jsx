@@ -1,32 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useAppContext } from "../contexts/AppContext";
 
 const Clock = () => {
-  const [date, setDate] = useState(new Date());
+  const { selectedNote, notes } = useAppContext();
+  const noteObj = notes.find((n) => n.id === selectedNote) || {};
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setDate(new Date());
-    }, 1000);
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    
+    return date.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
-    return () => clearInterval(timer);
-  }, []);
-
-  const formattedDate = date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-
-  const formattedTime = date.toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
+  const createdAt = formatDate(noteObj.created_at);
+  const updatedAt = formatDate(noteObj.updated_at);
 
   return (
-    <div className="text-white text-right">
-      <div className="text-lg font-semibold">{formattedTime}</div>
-      <div className="text-sm text-gray-400">{formattedDate}</div>
+    <div className="text-white text-right text-sm">
+      {selectedNote ? (
+        <div className="space-y-1">
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-gray-400">Créée le:</span>
+            <span>{createdAt}</span>
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-gray-400">Modifiée le:</span>
+            <span>{updatedAt}</span>
+          </div>
+        </div>
+      ) : (
+        <span className="text-gray-400">Sélectionnez une note</span>
+      )}
     </div>
   );
 };
