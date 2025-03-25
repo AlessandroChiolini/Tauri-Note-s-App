@@ -23,7 +23,7 @@ struct Note {
     title: String,
     content: String,
     created_at: String,
-    updated_at: String
+    updated_at: String,
 }
 
 // ======================
@@ -69,9 +69,9 @@ fn create_note(notebook_id: String, title: String) -> Result<Note, String> {
         id,
         notebook_id,
         title,
-        content:    String::new(),
+        content: String::new(),
         created_at: String::new(),
-        updated_at: String::new()
+        updated_at: String::new(),
     })
 }
 
@@ -115,7 +115,7 @@ fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
                 title: row.get(2)?,
                 content: row.get(3)?,
                 created_at: row.get(4)?,
-                updated_at: row.get(5)?
+                updated_at: row.get(5)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -159,8 +159,7 @@ fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
     }
 }
 
-
-#[command]  //Mettre une note à la corbeille
+#[command] //Mettre une note à la corbeille
 fn delete_note(note_id: String) -> Result<(), String> {
     println!("HEA");
     let conn = establish_connection()?;
@@ -174,7 +173,7 @@ fn delete_note(note_id: String) -> Result<(), String> {
     }
 }
 
-#[command]  // Supprimer les éléments de la corbeille
+#[command] // Supprimer les éléments de la corbeille
 fn permanently_delete_note(note_id: String) -> Result<(), String> {
     let conn = establish_connection()?;
     let affected_rows = conn
@@ -187,7 +186,7 @@ fn permanently_delete_note(note_id: String) -> Result<(), String> {
     }
 }
 
-#[command]  // Afficher les notes supprimées
+#[command] // Afficher les notes supprimées
 fn get_deleted_notes() -> Result<Vec<Note>, String> {
     let conn = establish_connection()?;
 
@@ -213,6 +212,18 @@ fn get_deleted_notes() -> Result<Vec<Note>, String> {
     Ok(notes)
 }
 
+#[command]
+fn restore_note(note_id: String) -> Result<(), String> {
+    let conn = establish_connection()?;
+    let affected_rows = conn
+        .execute("UPDATE notes SET deleted = FALSE WHERE id = ?", [&note_id])
+        .map_err(|e| e.to_string())?;
+    if affected_rows == 0 {
+        Err(format!("No note found with id: {}", note_id))
+    } else {
+        Ok(())
+    }
+}
 
 #[command]
 fn delete_notebook(notebook_id: String) -> Result<(), String> {
@@ -226,8 +237,6 @@ fn delete_notebook(notebook_id: String) -> Result<(), String> {
         Ok(())
     }
 }
-
-
 
 #[tauri::command]
 fn initialize_db() -> Result<(), String> {
@@ -265,19 +274,19 @@ fn main() {
     dotenv().ok();
 
     tauri::Builder::default()
-        
-        
         //MENU BAR Tauri v2: https://v2.tauri.app/learn/window-menu/
         .setup(|app| {
             let menu = MenuBuilder::new(app)
                 .items(&[
-                    &SubmenuBuilder::new(app, "File")
-                        .quit()
-                        .build()?,
+                    &SubmenuBuilder::new(app, "File").quit().build()?,
                     &SubmenuBuilder::new(app, "Edit")
-                        .undo().redo()
+                        .undo()
+                        .redo()
                         .separator()
-                        .copy().paste().cut().select_all()
+                        .copy()
+                        .paste()
+                        .cut()
+                        .select_all()
                         .separator()
                         .build()?,
                     &SubmenuBuilder::new(app, "View")
@@ -295,7 +304,6 @@ fn main() {
             app.handle().set_menu(menu)?;
 
             app.on_menu_event(move |_app_handle: &tauri::AppHandle, event| {
-
                 println!("menu event: {:?}", event.id());
 
                 match event.id().0.as_str() {
@@ -312,8 +320,6 @@ fn main() {
             });
             Ok(())
         })
-
-
         // INVOKE HANDLER
         .invoke_handler(tauri::generate_handler![
             initialize_db,
@@ -326,7 +332,8 @@ fn main() {
             delete_note,
             get_deleted_notes,
             permanently_delete_note,
-            delete_notebook
+            delete_notebook,
+            restore_note // Add this line
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

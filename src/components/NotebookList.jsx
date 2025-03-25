@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../contexts/AppContext";
 import CreateNotebookForm from "./CreateNotebookForm";
+import TrashBin from "./TrashBin"; // Import the TrashBin component
 
 const NotebookList = () => {
   const { notebooks, selectedNotebook, selectNotebook, deleteNotebook } = useAppContext();
@@ -51,6 +52,10 @@ const NotebookList = () => {
           </li>
         ))}
       </ul>
+      
+      {/* Add the TrashBin component here */}
+      <TrashBin />
+      
       {contextMenu && (
         <div
           className="absolute bg-white text-black border border-gray-300 rounded shadow-lg z-50"
