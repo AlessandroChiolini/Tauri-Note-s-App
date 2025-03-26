@@ -12,7 +12,6 @@ function App() {
       {/* En-tête fixe */}
       <div className="bg-gray-900 p-3 flex justify-between items-center border-b border-gray-700 fixed top-0 left-0 right-0 z-50">
         <h1 className="text-white text-xl font-bold">Notes App</h1>
-        <Clock />
       </div>
       
       {/* Contenu principal avec un padding en haut pour éviter le chevauchement */}

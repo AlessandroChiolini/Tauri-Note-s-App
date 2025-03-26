@@ -159,6 +159,26 @@ export function useNotebooks() {
     setSortDirection(sortDirection * -1); // Inverse la direction pour le prochain tri
   };
 
+  const sortNotesByTitle = () => {
+    const sortedNotes = [...notes].sort((a, b) => {
+      const titleA = (a.title || "").toLowerCase();
+      const titleB = (b.title || "").toLowerCase();
+      return sortDirection * titleA.localeCompare(titleB);
+    });
+    setNotes(sortedNotes);
+    setSortDirection(sortDirection * -1);
+  };
+
+  const sortNotesByDate = (dateField) => {
+    const sortedNotes = [...notes].sort((a, b) => {
+      const dateA = new Date(a[dateField]);
+      const dateB = new Date(b[dateField]);
+      return sortDirection * (dateB - dateA);
+    });
+    setNotes(sortedNotes);
+    setSortDirection(sortDirection * -1);
+  };
+
   const searchNotes = (query) => {
     setSearchQuery(query);
     if (!query) {
@@ -199,6 +219,8 @@ export function useNotebooks() {
     closeCreateNoteModal,
     sortNotes,
     searchNotes,
-    deleteNote
+    deleteNote,
+    sortNotesByTitle,
+    sortNotesByDate
   };
 }

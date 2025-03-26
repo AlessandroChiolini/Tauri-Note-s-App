@@ -26,20 +26,40 @@ const NoteList = () => {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
-    <div className="flex-1 bg-gray-700 text-white flex flex-col min-w-[200px] relative">
+    <div className="bg-gray-800 flex flex-col relative">
       <NoteListHeader />
-      <ul className="space-y-2 overflow-y-auto">
+      <ul className="space-y-2 overflow-y-auto p-2">
         {notes.map((note) => (
           <li
             key={note.id}
             onClick={() => selectNote(note.id)}
             onContextMenu={(e) => handleContextMenu(e, note.id)}
-            className={`cursor-pointer px-2 py-1 hover:bg-gray-600 ${
-              note.id === selectedNote ? "bg-gray-500 text-white" : ""
+            className={`cursor-pointer p-2 hover:bg-gray-600 rounded ${
+              note.id === selectedNote ? "bg-gray-500" : ""
             }`}
           >
-            {note.title || "(Sans titre)"}
+            <div className="flex flex-col">
+              <div className="text-white font-medium">
+                {note.title || "(Sans titre)"}
+              </div>
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>Créé le: {formatDate(note.created_at)}</span>
+                <span>Modifié le: {formatDate(note.updated_at)}</span>
+              </div>
+            </div>
           </li>
         ))}
       </ul>
