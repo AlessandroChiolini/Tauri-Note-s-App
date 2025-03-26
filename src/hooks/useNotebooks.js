@@ -19,7 +19,7 @@ export function useNotebooks() {
   const [selectedNote, setSelectedNote] = useState(null);
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortAscending, setSortAscending] = useState(true);
+  const [sortDirection, setSortDirection] = useState(1); // 1 pour croissant, -1 pour décroissant
 
   const fetchNotebooks = async () => {
     try {
@@ -151,14 +151,12 @@ export function useNotebooks() {
 
   const sortNotes = () => {
     const sortedNotes = [...notes].sort((a, b) => {
-      if (sortAscending) {
-        return a.title.localeCompare(b.title);
-      } else {
-        return b.title.localeCompare(a.title);
-      }
+      const titleA = (a.title || "").toLowerCase();
+      const titleB = (b.title || "").toLowerCase();
+      return sortDirection * titleA.localeCompare(titleB);
     });
     setNotes(sortedNotes);
-    setSortAscending(!sortAscending);
+    setSortDirection(sortDirection * -1); // Inverse la direction pour le prochain tri
   };
 
   const searchNotes = (query) => {

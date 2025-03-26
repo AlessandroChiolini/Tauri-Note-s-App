@@ -100,12 +100,15 @@ fn get_notebooks() -> Result<Vec<Notebook>, String> {
 
 /// Fetch notes for a specific notebook.
 #[command]
-fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
+fn get_notes(notebook_id: String, sort_by: Option<String>) -> Result<Vec<Note>, String> {
     let conn = establish_connection()?;
 
-    let mut stmt = conn
-        .prepare("SELECT id, notebook_id, title, content, created_at, updated_at FROM notes WHERE notebook_id = ? AND deleted = FALSE")
-        .map_err(|e| e.to_string())?;
+    let query = "SELECT id, notebook_id, title, content, created_at, updated_at 
+                 FROM notes 
+                 WHERE notebook_id = ? AND deleted = FALSE 
+                 ORDER BY title COLLATE NOCASE";
+
+    let mut stmt = conn.prepare(query).map_err(|e| e.to_string())?;
 
     let notes_iter = stmt
         .query_map([notebook_id], |row| {
@@ -121,7 +124,6 @@ fn get_notes(notebook_id: String) -> Result<Vec<Note>, String> {
         .map_err(|e| e.to_string())?;
 
     let notes: Vec<Note> = notes_iter.filter_map(Result::ok).collect();
-
     Ok(notes)
 }
 

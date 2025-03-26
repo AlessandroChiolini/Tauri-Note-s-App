@@ -4,10 +4,15 @@ import { useNotebooks } from "../hooks/useNotebooks";
 
 const AppContext = createContext(null);
 
-export function AppProvider({ children }) {
+export const AppProvider = ({ children }) => {
   const notebooksData = useNotebooks();
-  return <AppContext.Provider value={notebooksData}>{children}</AppContext.Provider>;
-}
+
+  return (
+    <AppContext.Provider value={{ ...notebooksData }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
 
 const deleteNote = async (noteId) => {
   try {

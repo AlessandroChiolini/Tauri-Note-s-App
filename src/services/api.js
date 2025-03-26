@@ -7,7 +7,9 @@ export const createNotebook = (title) => invoke("create_notebook", { title });
 export const deleteNotebook = (notebookId) => invoke("delete_notebook", { notebookId });
 
 
-export const getNotes = (notebookId) => invoke("get_notes", { notebookId });
+export const getNotes = async (notebookId, sortBy) => {
+  return invoke("get_notes", { notebookId, sortBy });
+};
 export const createNote = (notebookId, title) => invoke("create_note", { notebookId, title });
 export const updateNoteContent = (noteId, newContent) => invoke("update_note_content", { noteId, newContent });
 export const updateNoteTitle = (noteId, newTitle) => invoke("update_note_title", { noteId, newTitle });
