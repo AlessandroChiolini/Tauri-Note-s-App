@@ -218,84 +218,106 @@ Tauri 2.0 represents a paradigm shift in desktop application development by seam
 For academic or practical applications, Tauri's modular architecture, robust security measures, and efficient use of system resources offer a rich case study in modern software engineering practices.
 
 # Tauri Notes App
-This project is a simple notes app built with Tauri and React. It is a simple CRUD app that allows you to create, read, update, and delete notes.
-The objective of the app is to demonstrate that Tauri can be used to build desktop, web and mobile applications with a single codebase.
-It will be used to compare it with Electron mainly, but also with other frameworks like Flutter, React Native, etc.
 
-## Environment Setup
-### Node.js and npm
-You need to have Node.js and npm installed on your machine. You can download them from [here](https://nodejs.org/en).
+## Overview
+This project demonstrates a full-featured notes application built with Tauri and React, implementing complete CRUD (Create, Read, Update, Delete) functionality. The primary objective is to showcase Tauri's capabilities as a framework for developing cross-platform applications with a unified codebase spanning desktop, web, and mobile environments.
 
-### Rust
-You need to have Rust installed on your machine. You can download it from [here](https://www.rust-lang.org/fr/tools/install).
+The application serves as a practical benchmark for comparing Tauri against Electron and other cross-platform frameworks such as Flutter and React Native, particularly focusing on performance metrics, bundle size, and developer experience.
 
-To check if Rust is up to date 
-```bash
-rustup update
-```
+## Prerequisites
 
-### C++ tools
-You need to have C++ tools installed on your machine. You can install them with the Visual Studio Installer : 
-![image info](./images/visualstudioC.png)
+### Development Environment
+Before getting started, ensure your development environment meets the following requirements:
 
-### Tauri CLI
-You need to have Tauri CLI installed on your machine. You can install it by running the following command:
-```bash
-npm install -g @tauri-apps/cli
-```
+1. **Node.js and npm**  
+   Install the latest LTS version from [nodejs.org](https://nodejs.org/en)
 
-or 
+2. **Rust Development Environment**  
+   Install Rust using [rustup](https://www.rust-lang.org/tools/install)  
+   
+   Verify your installation is up-to-date:
+   ```bash
+   rustup update
+   ```
 
-```bash
-cargo install tauri-cli
-```
+3. **C++ Build Tools**  
+   **Windows**: Install using Visual Studio Installer with the "Desktop development with C++" workload  
+   **macOS**: Install Xcode Command Line Tools  
+   **Linux**: Install build-essential package
 
-## Recommended IDE Setup
+   ![Visual Studio C++ Configuration](./images/visualstudioC.png)
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+4. **Tauri CLI**  
+   Install the Tauri command-line interface using either npm:
+   ```bash
+   npm install -g @tauri-apps/cli
+   ```
+   
+   Or using Cargo:
+   ```bash
+   cargo install tauri-cli
+   ```
+
+### Recommended IDE Configuration
+
+For optimal development experience, we recommend:
+- [Visual Studio Code](https://code.visualstudio.com/)
+- [Tauri VS Code Extension](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
+- [rust-analyzer Extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
 ## Project Setup
-### Tauri App from 0
-To create a new Tauri app from scratch, you can run the following command:
+
+### Option 1: Creating a New Tauri Project
+To initialize a new Tauri application:
+
 ```bash
 npm create tauri-app@latest
 ```
 
-You will then have to follow the prompts to choose : 
-- The Package Manager : We have chosen npm
-- The Template : We have chosen React
-- Javascript or Typescript : We have chosen Javascript
+Follow the interactive prompts:
+- Package Manager: Select npm
+- Template: Select React
+- Language: Select JavaScript or TypeScript based on your preference
 
-Once the project is created, you can navigate inside it : 
+Navigate to your project directory and install dependencies:
 ```bash
-cd tauri-app
-```
-
-And you can install the dependencies 
-```bash
+cd your-project-name
 npm install
 ```
 
-### Tauri App from this repository
-To run this project, you can clone the repository and navigate inside it:
+### Option 2: Using This Repository
+Clone the repository and install dependencies:
+
 ```bash
 git clone https://github.com/AlessandroChiolini/Tauri-Note-s-App.git
 cd Tauri-Note-s-App
 npm install
 ```
 
-## Running the App
-To run the app, you can run the following command:
+## Development Workflow
+
+### Running the Development Environment
+Launch the application in development mode with hot-reload:
+
 ```bash
 npm run tauri dev
 ```
 
-This will start the Tauri app in development mode. You can now open the app on your desktop and start using it.
+This command starts both the frontend development server and the Tauri application, allowing real-time updates as you modify the code.
 
-## Building the App
-To build the app, you can run the following command:
+### Building for Production
+Generate a production-ready application package:
+
 ```bash
 npm run tauri build
 ```
 
-This will build the app for your current platform. You can find the built app in the `src-tauri/target/release` directory.
+The compiled application will be available in the `src-tauri/target/release` directory, ready for distribution.
+
+## Architecture
+
+The application follows a dual-layer architecture:
+- **Frontend**: React-based UI layer
+- **Backend**: Rust-powered core with access to native system capabilities
+
+This separation provides the benefits of web development productivity combined with the performance and security advantages of Rust.
