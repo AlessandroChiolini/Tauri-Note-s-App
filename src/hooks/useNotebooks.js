@@ -92,14 +92,19 @@ export function useNotebooks() {
   const updateNoteTitle = async (noteId, newTitle) => {
     try {
       await updateNoteTitleAPI(noteId, newTitle);
+      const currentTime = new Date().toISOString();
       setAllNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId ? { ...note, title: newTitle } : note
+          note.id === noteId 
+            ? { ...note, title: newTitle, updated_at: currentTime } 
+            : note
         )
       );
       setNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId ? { ...note, title: newTitle } : note
+          note.id === noteId 
+            ? { ...note, title: newTitle, updated_at: currentTime } 
+            : note
         )
       );
     } catch (error) {
@@ -110,14 +115,19 @@ export function useNotebooks() {
   const updateNoteContent = async (noteId, newContent) => {
     try {
       await updateNoteContentAPI(noteId, newContent);
+      const currentTime = new Date().toISOString();
       setAllNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId ? { ...note, content: newContent } : note
+          note.id === noteId 
+            ? { ...note, content: newContent, updated_at: currentTime } 
+            : note
         )
       );
       setNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId ? { ...note, content: newContent } : note
+          note.id === noteId 
+            ? { ...note, content: newContent, updated_at: currentTime } 
+            : note
         )
       );
     } catch (error) {

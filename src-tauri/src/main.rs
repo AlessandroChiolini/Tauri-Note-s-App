@@ -3,6 +3,7 @@ use rusqlite::{Connection, Result};
 use serde::Serialize;
 use std::env;
 use tauri::command;
+use chrono;
 use tauri::menu::{MenuBuilder, SubmenuBuilder};
 use uuid::Uuid;
 
@@ -133,7 +134,7 @@ fn update_note_content(note_id: String, new_content: String) -> Result<(), Strin
 
     let affected_rows = conn
         .execute(
-            "UPDATE notes SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            "UPDATE notes SET content = ?, updated_at = datetime('now') WHERE id = ?",
             (&new_content, &note_id),
         )
         .map_err(|e| e.to_string())?;
@@ -148,12 +149,15 @@ fn update_note_content(note_id: String, new_content: String) -> Result<(), Strin
 #[command]
 fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
     let conn = establish_connection()?;
+    let current_timestamp = chrono::Local::now().naive_local();
+
     let affected_rows = conn
         .execute(
-            "UPDATE notes SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            "UPDATE notes SET title = ?, updated_at = datetime('now') WHERE id = ?",
             (&new_title, &note_id),
         )
         .map_err(|e| e.to_string())?;
+
     if affected_rows == 0 {
         Err(format!("Aucune note trouvée avec l'id : {}", note_id))
     } else {
