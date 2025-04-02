@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppContext } from "../contexts/AppContext";
-import { ask } from '@tauri-apps/plugin-dialog';
-
 
 const TrashBin = () => {
   const { notebooks, loadNotes } = useAppContext();
