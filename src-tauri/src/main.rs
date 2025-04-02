@@ -159,6 +159,22 @@ fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
     }
 }
 
+#[command]
+fn update_note_notebook(note_id: String, new_notebook_id: String) -> Result<(), String> {
+    let conn = establish_connection()?;
+    let affected_rows = conn
+        .execute(
+            "UPDATE notes SET notebook_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (&new_notebook_id, &note_id),
+        )
+        .map_err(|e| e.to_string())?;
+    if affected_rows == 0 {
+        Err(format!("No note found with id: {}", note_id))
+    } else {
+        Ok(())
+    }
+}
+
 #[command] //Mettre une note à la corbeille
 fn delete_note(note_id: String) -> Result<(), String> {
     println!("HEA");
@@ -329,6 +345,7 @@ fn main() {
             get_notes,
             update_note_content,
             update_note_title,
+            update_note_notebook,
             delete_note,
             get_deleted_notes,
             permanently_delete_note,

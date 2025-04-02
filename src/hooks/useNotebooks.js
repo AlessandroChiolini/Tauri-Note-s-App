@@ -1,19 +1,10 @@
 // src/hooks/useNotebooks.js
 import { useState, useEffect } from "react";
-import {
-  getNotebooks,
-  createNotebook,
-  getNotes,
-  createNote,
-  updateNoteContent as updateNoteContentAPI,
-  updateNoteTitle as updateNoteTitleAPI,
-  deleteNotebook as deleteNotebookAPI,
-  deleteNote as deleteNoteAPI
-} from "../services/api";
+import { invoke } from "@tauri-apps/api/core";
 
 export function useNotebooks() {
   const [notebooks, setNotebooks] = useState([]);
-  const [allNotes, setAllNotes] = useState([]); // stores the full list
+  const [allNotes, setAllNotes] = useState([]); // stores full list
   const [notes, setNotes] = useState([]);       // filtered list for display
   const [selectedNotebook, setSelectedNotebook] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
@@ -23,7 +14,7 @@ export function useNotebooks() {
 
   const fetchNotebooks = async () => {
     try {
-      const data = await getNotebooks();
+      const data = await invoke("get_notebooks");
       setNotebooks(data);
     } catch (error) {
       console.error("Error fetching notebooks:", error);
@@ -36,7 +27,7 @@ export function useNotebooks() {
       setSelectedNote(null);
     }
     try {
-      const data = await getNotes(notebookId);
+      const data = await invoke("get_notes", { notebookId });
       setAllNotes(data);
       if (searchQuery) {
         setNotes(
@@ -54,7 +45,7 @@ export function useNotebooks() {
 
   const addNotebook = async (title) => {
     try {
-      await createNotebook(title);
+      await invoke("create_notebook", { title });
       fetchNotebooks();
     } catch (error) {
       console.error("Error creating notebook:", error);
@@ -64,7 +55,7 @@ export function useNotebooks() {
   const addNote = async (title) => {
     if (!selectedNotebook) return;
     try {
-      await createNote(selectedNotebook, title);
+      await invoke("create_note", { notebookId: selectedNotebook, title });
       setShowCreateNoteModal(false);
       await fetchNotes(selectedNotebook);
     } catch (error) {
@@ -72,11 +63,10 @@ export function useNotebooks() {
     }
   };
 
-  // New function to create an empty note
   const createEmptyNote = async () => {
     if (!selectedNotebook) return;
     try {
-      const newNote = await createNote(selectedNotebook, "");
+      const newNote = await invoke("create_note", { notebookId: selectedNotebook, title: "" });
       setShowCreateNoteModal(false);
       await fetchNotes(selectedNotebook, false);
       setSelectedNote(newNote.id);
@@ -91,7 +81,7 @@ export function useNotebooks() {
 
   const updateNoteTitle = async (noteId, newTitle) => {
     try {
-      await updateNoteTitleAPI(noteId, newTitle);
+      await invoke("update_note_title", { noteId, newTitle });
       setAllNotes((prevNotes) =>
         prevNotes.map((note) =>
           note.id === noteId ? { ...note, title: newTitle } : note
@@ -109,7 +99,7 @@ export function useNotebooks() {
 
   const updateNoteContent = async (noteId, newContent) => {
     try {
-      await updateNoteContentAPI(noteId, newContent);
+      await invoke("update_note_content", { noteId, newContent });
       setAllNotes((prevNotes) =>
         prevNotes.map((note) =>
           note.id === noteId ? { ...note, content: newContent } : note
@@ -125,12 +115,10 @@ export function useNotebooks() {
     }
   };
 
-  // New delete function for a notebook
   const deleteNotebook = async (notebookId) => {
     try {
-      await deleteNotebookAPI(notebookId);
+      await invoke("delete_notebook", { notebookId });
       setNotebooks((prev) => prev.filter((nb) => nb.id !== notebookId));
-      // If the deleted notebook was selected, clear selection and notes.
       if (selectedNotebook === notebookId) {
         setSelectedNotebook(null);
         setNotes([]);
@@ -177,30 +165,62 @@ export function useNotebooks() {
     fetchNotebooks();
   }, []);
 
-
   const deleteNote = async (noteId) => {
-    await deleteNoteAPI(noteId);
-    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+    try {
+      await invoke("delete_note", { noteId });
+      setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  };
+
+  const updateNoteNotebook = async (noteId, newNotebookId) => {
+    try {
+      await invoke("update_note_notebook", { noteId, newNotebookId });
+      setAllNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === noteId ? { ...note, notebook: newNotebookId } : note
+        )
+      );
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === noteId ? { ...note, notebook: newNotebookId } : note
+        )
+      );
+    } catch (error) {
+      console.error("Error updating note notebook:", error);
+    }
+  };
+
+  const selectNotebook = (notebookId) => {
+    setSelectedNotebook(notebookId);
+    fetchNotes(notebookId);
   };
 
   return {
     notebooks,
+    allNotes,
     notes,
     selectedNotebook,
     selectedNote,
     showCreateNoteModal,
-    selectNotebook: fetchNotes,
+    searchQuery,
+    sortAscending,
+    selectNotebook,
     selectNote,
     addNotebook,
     addNote,
     createEmptyNote,
     updateNoteContent,
     updateNoteTitle,
-    deleteNotebook, // added here
+    updateNoteNotebook,
+    deleteNotebook,
     openCreateNoteModal,
     closeCreateNoteModal,
     sortNotes,
     searchNotes,
-    deleteNote
+    deleteNote,
+    fetchNotebooks,
+    fetchNotes
   };
 }
