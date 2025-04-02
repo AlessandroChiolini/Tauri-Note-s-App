@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useAppContext } from "../contexts/AppContext";
 import CreateNotebookForm from "./CreateNotebookForm";
 import TrashBin from "./TrashBin"; // Import the TrashBin component
+import { Droppable } from "react-beautiful-dnd";
 
 const NotebookList = () => {
   const { notebooks, selectedNotebook, selectNotebook, deleteNotebook } = useAppContext();
@@ -40,16 +41,23 @@ const NotebookList = () => {
       {showForm && <CreateNotebookForm />}
       <ul className="space-y-2">
         {notebooks.map((nb) => (
-          <li 
-            key={nb.id} 
-            onClick={() => selectNotebook(nb.id)}
-            onContextMenu={(e) => handleContextMenu(e, nb.id)}
-            className={`cursor-pointer px-2 py-1 hover:bg-gray-700 rounded ${
-              nb.id === selectedNotebook ? "bg-gray-600 font-bold" : ""
-            }`}
-          >
-            {nb.title}
-          </li>
+          <Droppable droppableId={String(nb.id)} key={nb.id}>
+            {(provided) => (
+              <li 
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                onClick={() => selectNotebook(nb.id)}
+                onContextMenu={(e) => handleContextMenu(e, nb.id)}
+                className={`cursor-pointer px-2 py-1 hover:bg-gray-700 rounded ${
+                  nb.id === selectedNotebook ? "bg-gray-600 font-bold" : ""
+                }`}
+                style={{ minHeight: "40px" }} // provides an area for dropping
+              >
+                {nb.title}
+                {provided.placeholder}
+              </li>
+            )}
+          </Droppable>
         ))}
       </ul>
       
