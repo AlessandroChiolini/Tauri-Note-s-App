@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppContext } from "../contexts/AppContext";
+import { ask } from '@tauri-apps/plugin-dialog';
+
 
 const TrashBin = () => {
   const { notebooks, loadNotes } = useAppContext();
   const [deletedNotes, setDeletedNotes] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [restoreError, setRestoreError] = useState(null);
-  
+
   // Load deleted notes when the trash bin is opened
   useEffect(() => {
     if (isOpen) {
@@ -33,29 +35,33 @@ const TrashBin = () => {
 
   const handleRestore = async (noteId, notebookId) => {
     setRestoreError(null); // Clear previous errors
-    
+
     try {
       console.log(`Attempting to restore note with ID: ${noteId} to notebook ${notebookId}`);
-      
+
       // Add confirmation so we can see if user is actually clicking the button
-      if (!window.confirm(`Restore note to "${getNotebookName(notebookId)}" notebook?`)) {
+      const answer = await ask(`Restore note to "${getNotebookName(notebookId)}" notebook?`, {
+        title: 'Restore note',
+        kind: 'warning',
+      });
+      if (!answer) {
         console.log("Restore canceled by user");
         return;
       }
-      
+
       // CHANGE THIS LINE: Use noteId instead of note_id to match what the Rust function expects
       const params = { noteId: noteId };
       console.log("Sending params to restore_note:", params);
-      
+
       // Call the Rust function
       await invoke("restore_note", params);
-      
+
       // Log success
       console.log("Backend restore_note call succeeded");
-      
+
       // Refresh the trash list
       await loadDeletedNotes();
-      
+
       // Reload the notebook's notes if the notebook is selected
       if (loadNotes && typeof loadNotes === 'function') {
         console.log(`Refreshing notes for notebook ${notebookId}`);
@@ -63,7 +69,7 @@ const TrashBin = () => {
       } else {
         console.warn("loadNotes function is not available or not a function", loadNotes);
       }
-      
+
       console.log("Note restored successfully");
     } catch (error) {
       console.error("Failed to restore note:", error);
@@ -72,7 +78,11 @@ const TrashBin = () => {
   };
 
   const handlePermanentDelete = async (noteId) => {
-    if (window.confirm("Permanently delete this note? This action cannot be undone.")) {
+    const answer = await ask('Permanently delete this note? This action cannot be undone.', {
+      title: 'Permanent deletion',
+      kind: 'warning',
+    });
+    if (answer) {
       try {
         await invoke("permanently_delete_note", { noteId: noteId });
         await loadDeletedNotes(); // Refresh list after deletion
@@ -83,7 +93,11 @@ const TrashBin = () => {
   };
 
   const handleEmptyTrash = async () => {
-    if (window.confirm("Empty trash? This will permanently delete all notes in the trash.")) {
+    const answer = await ask("Empty trash? This will permanently delete all notes in the trash.", {
+      title: 'Empty the trash',
+      kind: 'warning',
+    });
+    if (answer) {
       try {
         for (const note of deletedNotes) {
           await invoke("permanently_delete_note", { noteId: note.id });
@@ -97,7 +111,7 @@ const TrashBin = () => {
 
   return (
     <div className="mt-6 border-t border-gray-700 pt-4">
-      <div 
+      <div
         className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -124,11 +138,11 @@ const TrashBin = () => {
               {restoreError}
             </div>
           )}
-          
+
           {deletedNotes.length > 0 ? (
             <>
               <div className="flex justify-end px-2 py-1">
-                <button 
+                <button
                   onClick={handleEmptyTrash}
                   className="text-xs text-red-400 hover:text-red-500"
                 >
@@ -137,20 +151,20 @@ const TrashBin = () => {
               </div>
               <ul className="space-y-1">
                 {deletedNotes.map((note) => (
-                  <li 
-                    key={note.id} 
+                  <li
+                    key={note.id}
                     className="flex flex-col px-2 py-1 text-gray-300 hover:bg-gray-700 rounded group"
                   >
                     <div className="flex items-center w-full">
                       <span className="truncate flex-1">{note.title || "Sans titre"}</span>
-                      <button 
+                      <button
                         onClick={() => handleRestore(note.id, note.notebook_id)}
                         className="text-green-400 hover:text-green-500 ml-2 p-1 rounded hover:bg-green-900/20"
                         title={`Restore to ${getNotebookName(note.notebook_id)}`}
                       >
                         <span role="img" aria-label="Restore">↩️</span>
                       </button>
-                      <button 
+                      <button
                         onClick={() => handlePermanentDelete(note.id)}
                         className="text-red-400 hover:text-red-500 ml-2 p-1 rounded hover:bg-red-900/20"
                         title="Delete permanently"

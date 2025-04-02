@@ -177,7 +177,6 @@ fn update_note_notebook(note_id: String, new_notebook_id: String) -> Result<(), 
 
 #[command] //Mettre une note à la corbeille
 fn delete_note(note_id: String) -> Result<(), String> {
-    println!("HEA");
     let conn = establish_connection()?;
     let affected_rows = conn
         .execute("UPDATE notes SET deleted = TRUE WHERE id = ?", [&note_id])
@@ -290,6 +289,7 @@ fn main() {
     dotenv().ok();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         //MENU BAR Tauri v2: https://v2.tauri.app/learn/window-menu/
         .setup(|app| {
             let menu = MenuBuilder::new(app)
