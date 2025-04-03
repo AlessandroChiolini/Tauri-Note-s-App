@@ -20,7 +20,7 @@ const NoteList = () => {
   };
 
   const handleDelete = () => {
-    if (contextMenu && contextMenu.noteId) {
+    if (contextMenu?.noteId) {
       deleteNote(contextMenu.noteId);
       setContextMenu(null);
     }
@@ -45,21 +45,23 @@ const NoteList = () => {
         {notes.map((note) => (
           <li
             key={note.id}
-            onClick={() => selectNote(note.id)}
-            onContextMenu={(e) => handleContextMenu(e, note.id)}
-            className={`cursor-pointer p-2 hover:bg-gray-600 rounded ${
+            className={`p-2 rounded ${
               note.id === selectedNote ? "bg-gray-500" : ""
             }`}
           >
-            <div className="flex flex-col">
-              <div className="text-white font-medium">
-                {note.title || "(Sans titre)"}
-              </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>Créé le: {formatDate(note.created_at)}</span>
+            <button
+              onClick={() => selectNote(note.id)}
+              onContextMenu={(e) => handleContextMenu(e, note.id)}
+              onKeyDown={(e) => e.key === 'Enter' && selectNote(note.id)}
+              className="w-full text-left cursor-pointer hover:bg-gray-600"
+            >
+              <div className="flex flex-col">
+                <div className="text-white font-medium">
+                  {note.title || "(Sans titre)"}
+                </div>
                 <span>Modifié le: {formatDate(note.updated_at)}</span>
               </div>
-            </div>
+            </button>
           </li>
         ))}
       </ul>

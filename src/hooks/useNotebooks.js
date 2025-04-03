@@ -159,14 +159,13 @@ export function useNotebooks() {
     setShowCreateNoteModal(false);
   };
 
-  const sortNotes = () => {
-    const sortedNotes = [...notes].sort((a, b) => {
-      const titleA = (a.title || "").toLowerCase();
-      const titleB = (b.title || "").toLowerCase();
-      return sortDirection * titleA.localeCompare(titleB);
-    });
-    setNotes(sortedNotes);
-    setSortDirection(sortDirection * -1); // Inverse la direction pour le prochain tri
+  const sortNotes = (sortBy = 'title') => {
+    // General sorting function that can sort by different fields
+    if (sortBy === 'title') {
+      sortNotesByTitle();
+    } else if (sortBy === 'created_at' || sortBy === 'updated_at') {
+      sortNotesByDate(sortBy);
+    }
   };
 
   const sortNotesByTitle = () => {

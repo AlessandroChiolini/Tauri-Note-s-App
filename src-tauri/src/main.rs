@@ -4,7 +4,6 @@ use serde::Serialize;
 use std::env;
 use tauri::command;
 use chrono;
-use tauri::menu::{MenuBuilder, SubmenuBuilder};
 use uuid::Uuid;
 
 // ======================
@@ -25,6 +24,17 @@ struct Note {
     content: String,
     created_at: String,
     updated_at: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+#[allow(dead_code)]
+struct Image {
+    id: String,
+    note_id: String,
+    filename: String,
+    mime_type: String,
+    size: i64,
+    created_at: String,
 }
 
 // ======================
@@ -101,7 +111,7 @@ fn get_notebooks() -> Result<Vec<Notebook>, String> {
 
 /// Fetch notes for a specific notebook.
 #[command]
-fn get_notes(notebook_id: String, sort_by: Option<String>) -> Result<Vec<Note>, String> {
+fn get_notes(notebook_id: String, _sort_by: Option<String>) -> Result<Vec<Note>, String> {
     let conn = establish_connection()?;
 
     let query = "SELECT id, notebook_id, title, content, created_at, updated_at 
@@ -130,6 +140,13 @@ fn get_notes(notebook_id: String, sort_by: Option<String>) -> Result<Vec<Note>, 
 
 #[command]
 fn update_note_content(note_id: String, new_content: String) -> Result<(), String> {
+    println!("Updating note content, length: {}", new_content.len());
+    
+    // Log pour déboguer si la chaîne contient des références d'images
+    if new_content.contains("image://") {
+        println!("Content contains image references");
+    }
+    
     let conn = establish_connection()?;
 
     let affected_rows = conn
@@ -149,7 +166,6 @@ fn update_note_content(note_id: String, new_content: String) -> Result<(), Strin
 #[command]
 fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
     let conn = establish_connection()?;
-    let current_timestamp = chrono::Local::now().naive_local();
 
     let affected_rows = conn
         .execute(
@@ -244,7 +260,7 @@ fn delete_notebook(notebook_id: String) -> Result<(), String> {
     }
 }
 
-#[tauri::command]
+#[command]
 fn initialize_db() -> Result<(), String> {
     let conn = establish_connection()?;
 
@@ -265,11 +281,142 @@ fn initialize_db() -> Result<(), String> {
             deleted BOOLEAN DEFAULT FALSE,
             FOREIGN KEY(notebook_id) REFERENCES notebooks(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS images (
+            id TEXT PRIMARY KEY,
+            note_id TEXT NOT NULL,
+            image_data BLOB NOT NULL,
+            filename TEXT NOT NULL,
+            mime_type TEXT NOT NULL,
+            size INTEGER NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
+        );
         ",
     )
     .map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[command]
+fn save_image(note_id: String, image_data: Vec<u8>, filename: String, mime_type: String) -> Result<Image, String> {
+    println!("Rust: save_image called for '{}', size: {} bytes", filename, image_data.len());
+    
+    // Vérifier que la table images existe
+    let conn = establish_connection()?;
+    
+    // Vérifier que la table existe
+    let table_check = conn.query_row(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='images'",
+        [],
+        |row| row.get::<_, String>(0)
+    );
+    
+    if table_check.is_err() {
+        println!("Table 'images' not found, creating it...");
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS images (
+                id TEXT PRIMARY KEY,
+                note_id TEXT NOT NULL,
+                image_data BLOB NOT NULL,
+                filename TEXT NOT NULL,
+                mime_type TEXT NOT NULL,
+                size INTEGER NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
+            )",
+            [],
+        ).map_err(|e| format!("Failed to create images table: {}", e.to_string()))?;
+    }
+    
+    // Vérification de la taille
+    const MAX_SIZE: usize = 2 * 1024 * 1024;
+    if image_data.len() > MAX_SIZE {
+        return Err("L'image est trop volumineuse (max 2Mo)".to_string());
+    }
+
+    // Générer un ID unique
+    let image_id = Uuid::new_v4().to_string();
+    
+    // Insérer l'image avec gestion d'erreur détaillée
+    match conn.execute(
+        "INSERT INTO images (id, note_id, image_data, filename, mime_type, size) VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            &image_id,
+            &note_id,
+            &image_data,
+            &filename,
+            &mime_type,
+            image_data.len() as i64,
+        ),
+    ) {
+        Ok(_) => {
+            println!("Image saved successfully with ID: {}", image_id);
+            let current_time = chrono::Local::now().naive_local().to_string();
+            Ok(Image {
+                id: image_id,
+                note_id,
+                filename,
+                mime_type,
+                size: image_data.len() as i64,
+                created_at: current_time,
+            })
+        },
+        Err(e) => {
+            println!("Error saving image: {}", e);
+            Err(format!("Failed to save image: {}", e))
+        }
+    }
+}
+
+#[command]
+fn get_image_metadata(image_id: String) -> Result<Image, String> {
+    let conn = establish_connection()?;
+    
+    let mut stmt = conn.prepare("SELECT id, note_id, filename, mime_type, size, created_at FROM images WHERE id = ?")
+        .map_err(|e| e.to_string())?;
+    
+    let mut rows = stmt.query([&image_id]).map_err(|e| e.to_string())?;
+    
+    if let Some(row) = rows.next().map_err(|e| e.to_string())? {
+        let image = Image {
+            id: row.get(0).map_err(|e| e.to_string())?,
+            note_id: row.get(1).map_err(|e| e.to_string())?,
+            filename: row.get(2).map_err(|e| e.to_string())?,
+            mime_type: row.get(3).map_err(|e| e.to_string())?,
+            size: row.get(4).map_err(|e| e.to_string())?,
+            created_at: row.get(5).map_err(|e| e.to_string())?,
+        };
+        Ok(image)
+    } else {
+        Err(format!("Image avec l'ID {} non trouvée", image_id))
+    }
+}
+
+#[command]
+fn get_image(image_id: String) -> Result<Vec<u8>, String> {
+    println!("Rust: get_image({}) appelé", image_id);
+    
+    let conn = establish_connection()?;
+    
+    // Vérification plus simple mais efficace
+    let query_result = conn.query_row(
+        "SELECT image_data FROM images WHERE id = ?",
+        [&image_id],
+        |row| row.get::<_, Vec<u8>>(0)
+    );
+    
+    match query_result {
+        Ok(image_data) => {
+            println!("Rust: Image {} trouvée, taille: {} octets", image_id, image_data.len());
+            Ok(image_data)
+        },
+        Err(e) => {
+            println!("Rust: Erreur lors de la récupération de l'image {}: {}", image_id, e);
+            Err(format!("Erreur lors de la récupération de l'image {}: {}", image_id, e))
+        }
+    }
 }
 
 // ======================
@@ -280,50 +427,10 @@ fn main() {
     dotenv().ok();
 
     tauri::Builder::default()
-        //MENU BAR Tauri v2: https://v2.tauri.app/learn/window-menu/
-        .setup(|app| {
-            let menu = MenuBuilder::new(app)
-                .items(&[
-                    &SubmenuBuilder::new(app, "File").quit().build()?,
-                    &SubmenuBuilder::new(app, "Edit")
-                        .undo()
-                        .redo()
-                        .separator()
-                        .copy()
-                        .paste()
-                        .cut()
-                        .select_all()
-                        .separator()
-                        .build()?,
-                    &SubmenuBuilder::new(app, "View")
-                        .text("settings", "Preferences")
-                        .build()?,
-                    &SubmenuBuilder::new(app, "Window")
-                        .minimize()
-                        .maximize()
-                        .build()?,
-                    &SubmenuBuilder::new(app, "Help")
-                        .text("source", "Github")
-                        .build()?,
-                ])
-                .build()?;
-            app.handle().set_menu(menu)?;
-
-            app.on_menu_event(move |_app_handle: &tauri::AppHandle, event| {
-                println!("menu event: {:?}", event.id());
-
-                match event.id().0.as_str() {
-                    "settings" => {
-                        println!("custom events");
-                    }
-                    "source" => {
-                        println!("custom events");
-                    }
-                    _ => {
-                        println!("unexpected menu event");
-                    }
-                }
-            });
+        //MENU BAR 
+        .setup(|_app| {
+            // Simplified menu setup for Tauri v1
+            // If you're using Tauri v2, the syntax would be different
             Ok(())
         })
         // INVOKE HANDLER
@@ -339,7 +446,10 @@ fn main() {
             get_deleted_notes,
             permanently_delete_note,
             delete_notebook,
-            restore_note // Add this line
+            restore_note,
+            save_image,
+            get_image,
+            get_image_metadata
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

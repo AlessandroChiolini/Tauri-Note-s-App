@@ -3,7 +3,6 @@ import Split from "react-split";
 import NotebookList from "./components/NotebookList";
 import NoteList from "./components/NoteList";
 import NoteEditor from "./components/NoteEditor";
-import Clock from "./components/Clock";
 import "./App.css";
 
 function App() {

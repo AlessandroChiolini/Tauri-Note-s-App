@@ -10,7 +10,7 @@ const CreateNoteForm = () => {
     if (title.trim() !== "") {
       addNote(title);
     }
-    closeCreateNoteModal && closeCreateNoteModal();
+    closeCreateNoteModal?.();
   };
 
   const handleKeyDown = (e) => {
@@ -18,7 +18,7 @@ const CreateNoteForm = () => {
       if (title.trim() !== "") {
         addNote(title);
       }
-      closeCreateNoteModal && closeCreateNoteModal();
+      closeCreateNoteModal?.();
     }
   };
 

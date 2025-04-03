@@ -22,7 +22,7 @@ const NotebookList = () => {
   };
 
   const handleDelete = () => {
-    if (contextMenu && contextMenu.nbId) {
+    if (contextMenu?.nbId) {
       deleteNotebook(contextMenu.nbId);
       setContextMenu(null);
     }
@@ -40,15 +40,17 @@ const NotebookList = () => {
       {showForm && <CreateNotebookForm />}
       <ul className="space-y-2">
         {notebooks.map((nb) => (
-          <li 
-            key={nb.id} 
-            onClick={() => selectNotebook(nb.id)}
-            onContextMenu={(e) => handleContextMenu(e, nb.id)}
-            className={`cursor-pointer px-2 py-1 hover:bg-gray-700 rounded ${
-              nb.id === selectedNotebook ? "bg-gray-600 font-bold" : ""
-            }`}
-          >
-            {nb.title}
+          <li key={nb.id} className="list-none">
+            <button 
+              onClick={() => selectNotebook(nb.id)}
+              onContextMenu={(e) => handleContextMenu(e, nb.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter') selectNotebook(nb.id); }}
+              className={`w-full text-left cursor-pointer px-2 py-1 hover:bg-gray-700 rounded ${
+                nb.id === selectedNotebook ? "bg-gray-600 font-bold" : ""
+              }`}
+            >
+              {nb.title}
+            </button>
           </li>
         ))}
       </ul>

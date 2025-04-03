@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from 'prop-types';
 
 export default function NoteInfoBtn({ title, content, triggerText }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,3 +36,9 @@ export default function NoteInfoBtn({ title, content, triggerText }) {
     </>
   );
 }
+
+NoteInfoBtn.propTypes = {
+  title: PropTypes.string.isRequired,
+  content: PropTypes.node.isRequired,
+  triggerText: PropTypes.string.isRequired
+};
