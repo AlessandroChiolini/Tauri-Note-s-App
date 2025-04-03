@@ -37,30 +37,21 @@ const TrashBin = () => {
     try {
       console.log(`Attempting to restore note with ID: ${noteId} to notebook ${notebookId}`);
 
-      // Add confirmation so we can see if user is actually clicking the button
-      const answer = await ask(`Restore note to "${getNotebookName(notebookId)}" notebook?`, {
-        title: 'Restore note',
-        kind: 'warning',
-      });
+      // Use window.confirm instead of undefined "ask"
+      const answer = window.confirm(`Restore note to "${getNotebookName(notebookId)}" notebook?`);
       if (!answer) {
         console.log("Restore canceled by user");
         return;
       }
 
-      // CHANGE THIS LINE: Use noteId instead of note_id to match what the Rust function expects
       const params = { noteId: noteId };
       console.log("Sending params to restore_note:", params);
 
-      // Call the Rust function
       await invoke("restore_note", params);
-
-      // Log success
       console.log("Backend restore_note call succeeded");
 
-      // Refresh the trash list
       await loadDeletedNotes();
 
-      // Reload the notebook's notes if the notebook is selected
       if (loadNotes && typeof loadNotes === 'function') {
         console.log(`Refreshing notes for notebook ${notebookId}`);
         await loadNotes(notebookId);
@@ -76,10 +67,7 @@ const TrashBin = () => {
   };
 
   const handlePermanentDelete = async (noteId) => {
-    const answer = await ask('Permanently delete this note? This action cannot be undone.', {
-      title: 'Permanent deletion',
-      kind: 'warning',
-    });
+    const answer = window.confirm("Permanently delete this note? This action cannot be undone.");
     if (answer) {
       try {
         await invoke("permanently_delete_note", { noteId: noteId });
