@@ -8,8 +8,9 @@ import { saveImage as saveImageAPI } from "../services/api";
 const AppContext = createContext(null);
 
 export const AppProvider = ({ children }) => {
+  // useNotebooks now returns notebooks, notes, updateNoteNotebook, selectNotebook, etc.
   const notebooksData = useNotebooks();
-  
+
   // Add deleteNote function to the context
   const deleteNote = useCallback(async (noteId) => {
     try {
@@ -25,7 +26,7 @@ export const AppProvider = ({ children }) => {
       console.error("Failed to delete note:", error);
     }
   }, [notebooksData]);
-  
+
   // Add saveImage function to the context
   const saveImage = useCallback(async (noteId, imageData, filename, mimeType) => {
     console.log("Saving image:", { noteId, size: imageData.length, filename, type: mimeType });
@@ -38,17 +39,16 @@ export const AppProvider = ({ children }) => {
       throw error;
     }
   }, []);
-  
-  // Memoize the context value
+
+  // Combine all the functionality from notebooksData along with deleteNote and saveImage
   const contextValue = useMemo(() => {
     return { 
-      ...notebooksData, 
-      deleteNote, 
+      ...notebooksData,
+      deleteNote,
       saveImage,
-      // Ajoutez d'autres fonctions nécessaires ici
     };
   }, [notebooksData, deleteNote, saveImage]);
-  
+
   return (
     <AppContext.Provider value={contextValue}>
       {children}
@@ -57,7 +57,7 @@ export const AppProvider = ({ children }) => {
 };
 
 AppProvider.propTypes = {
-  children: PropTypes.node.isRequired
+  children: PropTypes.node.isRequired,
 };
 
 export const useAppContext = () => useContext(AppContext);

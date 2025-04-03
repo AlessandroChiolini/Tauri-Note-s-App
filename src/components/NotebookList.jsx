@@ -2,14 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../contexts/AppContext";
 import CreateNotebookForm from "./CreateNotebookForm";
-import TrashBin from "./TrashBin"; // Import the TrashBin component
+import TrashBin from "./TrashBin";
+import { Droppable } from "react-beautiful-dnd";
 
 const NotebookList = () => {
   const { notebooks, selectedNotebook, selectNotebook, deleteNotebook } = useAppContext();
   const [showForm, setShowForm] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
 
-  // Hide context menu on click outside
+  // Hide context menu when clicking outside
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
     document.addEventListener("click", handleClick);
@@ -18,12 +19,12 @@ const NotebookList = () => {
 
   const handleContextMenu = (e, nbId) => {
     e.preventDefault();
-    setContextMenu({ nbId, x: e.clientX, y: e.clientY });
+    setContextMenu({ notebookId: nbId, x: e.clientX, y: e.clientY });
   };
 
   const handleDelete = () => {
-    if (contextMenu?.nbId) {
-      deleteNotebook(contextMenu.nbId);
+    if (contextMenu && contextMenu.notebookId) {
+      deleteNotebook(contextMenu.notebookId);
       setContextMenu(null);
     }
   };
@@ -40,22 +41,27 @@ const NotebookList = () => {
       {showForm && <CreateNotebookForm />}
       <ul className="space-y-2">
         {notebooks.map((nb) => (
-          <li key={nb.id} className="list-none">
-            <button 
-              onClick={() => selectNotebook(nb.id)}
-              onContextMenu={(e) => handleContextMenu(e, nb.id)}
-              onKeyDown={(e) => { if (e.key === 'Enter') selectNotebook(nb.id); }}
-              className={`w-full text-left cursor-pointer px-2 py-1 hover:bg-gray-700 rounded ${
-                nb.id === selectedNotebook ? "bg-gray-600 font-bold" : ""
-              }`}
-            >
-              {nb.title}
-            </button>
-          </li>
+          <Droppable droppableId={String(nb.id)} key={nb.id}>
+            {(provided, snapshot) => (
+              <li 
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                onClick={() => selectNotebook(nb.id)}
+                onContextMenu={(e) => handleContextMenu(e, nb.id)}
+                onKeyDown={(e) => { if (e.key === 'Enter') selectNotebook(nb.id); }}
+                className={`cursor-pointer px-2 py-1 rounded ${
+                  nb.id === selectedNotebook ? "bg-gray-600 font-bold" : "hover:bg-gray-700"
+                } ${snapshot.isDraggingOver ? "bg-blue-700 border-2 border-dashed" : ""}`}
+                style={{ minHeight: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                {nb.title}
+                {provided.placeholder}
+              </li>
+            )}
+          </Droppable>
         ))}
       </ul>
       
-      {/* Add the TrashBin component here */}
       <TrashBin />
       
       {contextMenu && (

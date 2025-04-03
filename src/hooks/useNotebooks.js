@@ -19,7 +19,7 @@ export function useNotebooks() {
   const [selectedNote, setSelectedNote] = useState(null);
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortDirection, setSortDirection] = useState(1); // 1 pour croissant, -1 pour décroissant
+  const [sortDirection, setSortDirection] = useState(1); // 1 for ascending, -1 for descending
 
   const fetchNotebooks = async () => {
     try {
@@ -72,7 +72,7 @@ export function useNotebooks() {
     }
   };
 
-  // New function to create an empty note
+  // Function to create an empty note
   const createEmptyNote = async () => {
     if (!selectedNotebook) return;
     try {
@@ -95,15 +95,15 @@ export function useNotebooks() {
       const currentTime = new Date().toISOString();
       setAllNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId 
-            ? { ...note, title: newTitle, updated_at: currentTime } 
+          note.id === noteId
+            ? { ...note, title: newTitle, updated_at: currentTime }
             : note
         )
       );
       setNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId 
-            ? { ...note, title: newTitle, updated_at: currentTime } 
+          note.id === noteId
+            ? { ...note, title: newTitle, updated_at: currentTime }
             : note
         )
       );
@@ -118,15 +118,15 @@ export function useNotebooks() {
       const currentTime = new Date().toISOString();
       setAllNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId 
-            ? { ...note, content: newContent, updated_at: currentTime } 
+          note.id === noteId
+            ? { ...note, content: newContent, updated_at: currentTime }
             : note
         )
       );
       setNotes((prevNotes) =>
         prevNotes.map((note) =>
-          note.id === noteId 
-            ? { ...note, content: newContent, updated_at: currentTime } 
+          note.id === noteId
+            ? { ...note, content: newContent, updated_at: currentTime }
             : note
         )
       );
@@ -140,7 +140,7 @@ export function useNotebooks() {
     try {
       await deleteNotebookAPI(notebookId);
       setNotebooks((prev) => prev.filter((nb) => nb.id !== notebookId));
-      // If the deleted notebook was selected, clear selection and notes.
+      // If the deleted notebook was selected, clear its notes.
       if (selectedNotebook === notebookId) {
         setSelectedNotebook(null);
         setNotes([]);
@@ -159,8 +159,8 @@ export function useNotebooks() {
     setShowCreateNoteModal(false);
   };
 
+  // General sorting function that can sort by different fields
   const sortNotes = (sortBy = 'title') => {
-    // General sorting function that can sort by different fields
     if (sortBy === 'title') {
       sortNotesByTitle();
     } else if (sortBy === 'created_at' || sortBy === 'updated_at') {
@@ -204,26 +204,58 @@ export function useNotebooks() {
     fetchNotebooks();
   }, []);
 
-
   const deleteNote = async (noteId) => {
-    await deleteNoteAPI(noteId);
-    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+    try {
+      await deleteNoteAPI(noteId);
+      setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  };
+
+  // Optional: If you want to update a note's notebook, add this functionality.
+  const updateNoteNotebook = async (noteId, newNotebookId) => {
+    try {
+      // Uncomment and adjust if you have an API endpoint for updating note's notebook.
+      // await updateNoteNotebookAPI(noteId, newNotebookId);
+      setAllNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === noteId ? { ...note, notebook: newNotebookId } : note
+        )
+      );
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === noteId ? { ...note, notebook: newNotebookId } : note
+        )
+      );
+    } catch (error) {
+      console.error("Error updating note notebook:", error);
+    }
+  };
+
+  const selectNotebook = (notebookId) => {
+    setSelectedNotebook(notebookId);
+    fetchNotes(notebookId);
   };
 
   return {
     notebooks,
+    allNotes,
     notes,
     selectedNotebook,
     selectedNote,
     showCreateNoteModal,
-    selectNotebook: fetchNotes,
+    searchQuery,
+    sortDirection,
+    selectNotebook,
     selectNote,
     addNotebook,
     addNote,
     createEmptyNote,
     updateNoteContent,
     updateNoteTitle,
-    deleteNotebook, // added here
+    updateNoteNotebook,
+    deleteNotebook,
     openCreateNoteModal,
     closeCreateNoteModal,
     sortNotes,

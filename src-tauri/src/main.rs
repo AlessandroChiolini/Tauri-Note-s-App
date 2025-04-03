@@ -1,9 +1,9 @@
+use chrono;
 use dotenv::dotenv;
 use rusqlite::{Connection, Result};
 use serde::Serialize;
 use std::env;
 use tauri::command;
-use chrono;
 use uuid::Uuid;
 
 // ======================
@@ -141,12 +141,12 @@ fn get_notes(notebook_id: String, _sort_by: Option<String>) -> Result<Vec<Note>,
 #[command]
 fn update_note_content(note_id: String, new_content: String) -> Result<(), String> {
     println!("Updating note content, length: {}", new_content.len());
-    
+
     // Log pour déboguer si la chaîne contient des références d'images
     if new_content.contains("image://") {
         println!("Content contains image references");
     }
-    
+
     let conn = establish_connection()?;
 
     let affected_rows = conn
@@ -176,6 +176,22 @@ fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
 
     if affected_rows == 0 {
         Err(format!("Aucune note trouvée avec l'id : {}", note_id))
+    } else {
+        Ok(())
+    }
+}
+
+#[command]
+fn update_note_notebook(note_id: String, new_notebook_id: String) -> Result<(), String> {
+    let conn = establish_connection()?;
+    let affected_rows = conn
+        .execute(
+            "UPDATE notes SET notebook_id = ?, updated_at = datetime('now') WHERE id = ?",
+            (&new_notebook_id, &note_id),
+        )
+        .map_err(|e| e.to_string())?;
+    if affected_rows == 0 {
+        Err(format!("No note found with id: {}", note_id))
     } else {
         Ok(())
     }
@@ -300,19 +316,28 @@ fn initialize_db() -> Result<(), String> {
 }
 
 #[command]
-fn save_image(note_id: String, image_data: Vec<u8>, filename: String, mime_type: String) -> Result<Image, String> {
-    println!("Rust: save_image called for '{}', size: {} bytes", filename, image_data.len());
-    
+fn save_image(
+    note_id: String,
+    image_data: Vec<u8>,
+    filename: String,
+    mime_type: String,
+) -> Result<Image, String> {
+    println!(
+        "Rust: save_image called for '{}', size: {} bytes",
+        filename,
+        image_data.len()
+    );
+
     // Vérifier que la table images existe
     let conn = establish_connection()?;
-    
+
     // Vérifier que la table existe
     let table_check = conn.query_row(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='images'",
         [],
-        |row| row.get::<_, String>(0)
+        |row| row.get::<_, String>(0),
     );
-    
+
     if table_check.is_err() {
         println!("Table 'images' not found, creating it...");
         conn.execute(
@@ -327,9 +352,10 @@ fn save_image(note_id: String, image_data: Vec<u8>, filename: String, mime_type:
                 FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
             )",
             [],
-        ).map_err(|e| format!("Failed to create images table: {}", e.to_string()))?;
+        )
+        .map_err(|e| format!("Failed to create images table: {}", e.to_string()))?;
     }
-    
+
     // Vérification de la taille
     const MAX_SIZE: usize = 2 * 1024 * 1024;
     if image_data.len() > MAX_SIZE {
@@ -338,7 +364,7 @@ fn save_image(note_id: String, image_data: Vec<u8>, filename: String, mime_type:
 
     // Générer un ID unique
     let image_id = Uuid::new_v4().to_string();
-    
+
     // Insérer l'image avec gestion d'erreur détaillée
     match conn.execute(
         "INSERT INTO images (id, note_id, image_data, filename, mime_type, size) VALUES (?, ?, ?, ?, ?, ?)",
@@ -373,12 +399,15 @@ fn save_image(note_id: String, image_data: Vec<u8>, filename: String, mime_type:
 #[command]
 fn get_image_metadata(image_id: String) -> Result<Image, String> {
     let conn = establish_connection()?;
-    
-    let mut stmt = conn.prepare("SELECT id, note_id, filename, mime_type, size, created_at FROM images WHERE id = ?")
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, note_id, filename, mime_type, size, created_at FROM images WHERE id = ?",
+        )
         .map_err(|e| e.to_string())?;
-    
+
     let mut rows = stmt.query([&image_id]).map_err(|e| e.to_string())?;
-    
+
     if let Some(row) = rows.next().map_err(|e| e.to_string())? {
         let image = Image {
             id: row.get(0).map_err(|e| e.to_string())?,
@@ -397,24 +426,34 @@ fn get_image_metadata(image_id: String) -> Result<Image, String> {
 #[command]
 fn get_image(image_id: String) -> Result<Vec<u8>, String> {
     println!("Rust: get_image({}) appelé", image_id);
-    
+
     let conn = establish_connection()?;
-    
+
     // Vérification plus simple mais efficace
     let query_result = conn.query_row(
         "SELECT image_data FROM images WHERE id = ?",
         [&image_id],
-        |row| row.get::<_, Vec<u8>>(0)
+        |row| row.get::<_, Vec<u8>>(0),
     );
-    
+
     match query_result {
         Ok(image_data) => {
-            println!("Rust: Image {} trouvée, taille: {} octets", image_id, image_data.len());
+            println!(
+                "Rust: Image {} trouvée, taille: {} octets",
+                image_id,
+                image_data.len()
+            );
             Ok(image_data)
-        },
+        }
         Err(e) => {
-            println!("Rust: Erreur lors de la récupération de l'image {}: {}", image_id, e);
-            Err(format!("Erreur lors de la récupération de l'image {}: {}", image_id, e))
+            println!(
+                "Rust: Erreur lors de la récupération de l'image {}: {}",
+                image_id, e
+            );
+            Err(format!(
+                "Erreur lors de la récupération de l'image {}: {}",
+                image_id, e
+            ))
         }
     }
 }
@@ -427,7 +466,7 @@ fn main() {
     dotenv().ok();
 
     tauri::Builder::default()
-        //MENU BAR 
+        //MENU BAR
         .setup(|_app| {
             // Simplified menu setup for Tauri v1
             // If you're using Tauri v2, the syntax would be different
@@ -442,6 +481,7 @@ fn main() {
             get_notes,
             update_note_content,
             update_note_title,
+            update_note_notebook, // New functionality added
             delete_note,
             get_deleted_notes,
             permanently_delete_note,

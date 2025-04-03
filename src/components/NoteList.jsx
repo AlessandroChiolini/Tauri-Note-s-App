@@ -1,10 +1,11 @@
 // src/components/NoteList.jsx
 import React, { useState, useEffect } from "react";
+import { Droppable, Draggable } from "react-beautiful-dnd";
 import { useAppContext } from "../contexts/AppContext";
 import NoteListHeader from "./NoteListHeader";
 
 const NoteList = () => {
-  const { notes, selectedNote, selectNote, deleteNote } = useAppContext();
+  const { notes, selectedNote, selectNote, deleteNote, selectedNotebook } = useAppContext();
   const [contextMenu, setContextMenu] = useState(null);
 
   // Hide context menu when clicking anywhere
@@ -20,7 +21,7 @@ const NoteList = () => {
   };
 
   const handleDelete = () => {
-    if (contextMenu?.noteId) {
+    if (contextMenu && contextMenu.noteId) {
       deleteNote(contextMenu.noteId);
       setContextMenu(null);
     }
@@ -39,32 +40,47 @@ const NoteList = () => {
   };
 
   return (
-    <div className="bg-gray-800 flex flex-col relative">
+    <div className="flex-1 bg-gray-700 text-white flex flex-col min-w-[200px] relative">
       <NoteListHeader />
-      <ul className="space-y-2 overflow-y-auto p-2">
-        {notes.map((note) => (
-          <li
-            key={note.id}
-            className={`p-2 rounded ${
-              note.id === selectedNote ? "bg-gray-500" : ""
-            }`}
+      <Droppable droppableId={`notes-${selectedNotebook}`}>
+        {(provided) => (
+          <ul 
+            className="space-y-2 overflow-y-auto p-2" 
+            ref={provided.innerRef}
+            {...provided.droppableProps}
           >
-            <button
-              onClick={() => selectNote(note.id)}
-              onContextMenu={(e) => handleContextMenu(e, note.id)}
-              onKeyDown={(e) => e.key === 'Enter' && selectNote(note.id)}
-              className="w-full text-left cursor-pointer hover:bg-gray-600"
-            >
-              <div className="flex flex-col">
-                <div className="text-white font-medium">
-                  {note.title || "(Sans titre)"}
-                </div>
-                <span>Modifié le: {formatDate(note.updated_at)}</span>
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
+            {notes.map((note, index) => (
+              <Draggable key={note.id} draggableId={String(note.id)} index={index}>
+                {(provided) => (
+                  <li
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    onContextMenu={(e) => handleContextMenu(e, note.id)}
+                    className={`cursor-pointer px-2 py-1 hover:bg-gray-600 ${
+                      note.id === selectedNote ? "bg-gray-500 text-white" : ""
+                    }`}
+                  >
+                    <button
+                      onClick={() => selectNote(note.id)}
+                      onKeyDown={(e) => e.key === 'Enter' && selectNote(note.id)}
+                      className="w-full text-left"
+                    >
+                      <div className="flex flex-col">
+                        <div className="text-white font-medium">
+                          {note.title || "(Sans titre)"}
+                        </div>
+                        <span>Modifié le: {formatDate(note.updated_at)}</span>
+                      </div>
+                    </button>
+                  </li>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </ul>
+        )}
+      </Droppable>
       {contextMenu && (
         <div
           className="absolute bg-white text-black border border-gray-300 rounded shadow-lg z-50"
