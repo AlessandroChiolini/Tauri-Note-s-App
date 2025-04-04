@@ -5,14 +5,13 @@ import { invoke } from "@tauri-apps/api/core";
 import NotebookList from "./components/NotebookList";
 import NoteList from "./components/NoteList";
 import NoteEditor from "./components/NoteEditor";
-import Clock from "./components/Clock";
 import "./App.css";
 import { useAppContext } from "./contexts/AppContext";
 
 function App() {
   const { selectNotebook } = useAppContext();
 
-  // New helper to call the backend command update_note_notebook
+  // Fonction pour mettre à jour le notebook de la note via l'API Tauri
   const updateNoteNotebook = async (noteId, newNotebookId) => {
     try {
       await invoke("update_note_notebook", { noteId, newNotebookId });
@@ -25,7 +24,7 @@ function App() {
     const { draggableId, source, destination } = result;
     if (!destination) return;
 
-    // If the note is dropped in a different droppable area (e.g. a different notebook)
+    // Si la note est déposée dans un autre droppable (notebook différent)
     if (source.droppableId !== destination.droppableId) {
       console.log(
         "Changing notebook for note", draggableId, "to", destination.droppableId
@@ -37,14 +36,16 @@ function App() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="h-screen flex flex-col">
-        <div className="bg-gray-900 p-3 flex justify-between items-center border-b border-gray-700 fixed top-0 left-0 right-0 z-50">
+      <div className="w-screen h-screen bg-gray-900 text-white">
+        {/* Header sans bordure et avec fond uniforme */}
+        <div className="p-3 fixed top-0 left-0 right-0 z-50 flex items-center bg-gray-900">
           <h1 className="text-white text-xl font-bold">Notes App</h1>
-          <Clock />
         </div>
-        <div className="pt-16 flex flex-1">
+        
+        {/* Contenu principal, décalé pour laisser place au header */}
+        <div className="pt-16 h-full">
           <Split
-            className="flex flex-1"
+            className="flex h-full"
             sizes={[15, 25, 60]}
             minSize={100}
             gutterSize={4}
