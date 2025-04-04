@@ -10,7 +10,6 @@ const NotebookList = () => {
   const [showForm, setShowForm] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
 
-  // Hide context menu when clicking outside
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
     document.addEventListener("click", handleClick);
@@ -44,8 +43,6 @@ const NotebookList = () => {
           <Droppable droppableId={String(nb.id)} key={nb.id}>
             {(provided) => (
               <li 
-                ref={provided.innerRef}
-                {...provided.droppableProps}
                 onClick={() => selectNotebook(nb.id)}
                 onContextMenu={(e) => handleContextMenu(e, nb.id)}
                 onKeyDown={(e) => { if (e.key === 'Enter') selectNotebook(nb.id); }}
@@ -53,18 +50,32 @@ const NotebookList = () => {
                   nb.id === selectedNotebook ? "bg-gray-600 font-bold" : "hover:bg-gray-700"
                 }`}
                 style={{
+                  position: "relative",
                   minHeight: "60px",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  position: "relative"
+                  justifyContent: "center"
                 }}
               >
-                {nb.title}
-                {/* Render placeholder but hide it so the droppable functions correctly */}
-                <div style={{ display: "none" }}>
-                  {provided.placeholder}
+                {/* Absolute overlay covering the entire li as dropzone */}
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    // Ensure overlay gets pointer events
+                    pointerEvents: "all"
+                  }}
+                />
+                {/* Notebook title visible above overlay */}
+                <div style={{ position: "relative", zIndex: 1, width: "100%", textAlign: "center" }}>
+                  {nb.title}
                 </div>
+                {provided.placeholder}
               </li>
             )}
           </Droppable>
