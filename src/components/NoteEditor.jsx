@@ -245,45 +245,56 @@ const NoteEditor = () => {
       {selectedNote ? (
         <>
           <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Titre de la note"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-2 rounded focus:outline-none focus:ring focus:border-blue-300 text-white bg-gray-700 mb-2"
-              autoFocus
-            />
+            {/* Formatting and image buttons container */}
             <div className="flex mb-2 space-x-2">
-              <button onClick={() => wrapSelectedText("**", "**")} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded" title="Gras">B</button>
-              <button onClick={() => wrapSelectedText("*", "*")} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded italic" title="Italique">I</button>
-              <button onClick={() => wrapSelectedText("~~", "~~")} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded line-through" title="Barré">S</button>
-              <button onClick={() => wrapSelectedText("`", "`")} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-mono" title="Code">Code</button>
-              <button onClick={() => wrapSelectedText("\n```\n", "\n```")} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-mono" title="Bloc de code">Bloc</button>
+              <button
+                onClick={() => wrapSelectedText("**", "**")}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
+                title="Bold"
+              >
+                B
+              </button>
+              <button
+                onClick={() => wrapSelectedText("*", "*")}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded italic"
+                title="Italic"
+              >
+                I
+              </button>
+              <button
+                onClick={() => wrapSelectedText("~~", "~~")}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded line-through"
+                title="Strikethrough"
+              >
+                S
+              </button>
+              <button
+                onClick={() => wrapSelectedText("`", "`")}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-mono"
+                title="Code"
+              >
+                Code
+              </button>
+              <button
+                onClick={() => wrapSelectedText("\n```\n", "\n```")}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-mono"
+                title="Code Block"
+              >
+                Bloc
+              </button>
+              <button
+                onClick={handleImageUpload}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded flex items-center gap-1"
+                title="Insert image (max 2MB)"
+              >
+                <span>📷</span>
+                <span>Image</span>
+              </button>
             </div>
+
+            {/* Info button and error messages */}
             <div className="flex justify-between items-center">
-              <NoteInfoBtn
-                title="Infos de la note"
-                content={`ID: ${noteObj.id}\n📅 Créé : ${noteObj.created_at || "N/A"}\n✏️ Mis à jour : ${noteObj.updated_at || "N/A"}`}
-                triggerText="🛈 Détails"
-              />
-              <div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <button
-                  onClick={handleImageUpload}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded flex items-center"
-                  title="Ajouter une image (max 2Mo)"
-                >
-                  <span>📷</span>
-                  <span className="ml-1">Image</span>
-                </button>
-                {imageError && <div className="text-red-500 text-xs mt-1">{imageError}</div>}
-              </div>
+              {imageError && <div className="text-red-500 text-xs mt-1">{imageError}</div>}
             </div>
           </div>
 
@@ -312,6 +323,14 @@ const NoteEditor = () => {
               />
             </div>
           </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+            accept="image/*"
+          />
 
           {isSaving && (
             <div className="absolute bottom-4 right-4 bg-gray-700 text-white px-2 py-1 rounded text-sm">

@@ -35,22 +35,20 @@ const NoteListHeader = () => {
       <div className="flex gap-2">
         <button
           onClick={handleTitleSort}
-          className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 px-3 py-1 rounded flex items-center gap-2"
         >
           <span>{isAscending ? "🔤" : "🔤↓"}</span>
         </button>
-
         <button
           onClick={handleCreationSort}
-          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 px-3 py-1 rounded flex items-center gap-2"
           title="Trier par date de création"
         >
           <span>{creationAscending ? "📅" : "📅↓"}</span>
         </button>
-
         <button
           onClick={handleModificationSort}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 px-3 py-1 rounded flex items-center gap-2"
           title="Trier par date de modification"
         >
           <span>{modificationAscending ? "✏️" : "✏️↓"}</span>

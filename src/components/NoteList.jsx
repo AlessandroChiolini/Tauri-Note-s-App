@@ -86,7 +86,7 @@ const NoteList = () => {
       </Droppable>
       {contextMenu && (
         <div
-          className="absolute bg-white text-black border border-gray-300 rounded shadow-lg z-50"
+          className="fixed bg-white text-black border border-gray-300 rounded shadow-lg z-50"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button
