@@ -42,7 +42,7 @@ const NotebookList = () => {
       <ul className="space-y-2">
         {notebooks.map((nb) => (
           <Droppable droppableId={String(nb.id)} key={nb.id}>
-            {(provided, snapshot) => (
+            {(provided) => (
               <li 
                 ref={provided.innerRef}
                 {...provided.droppableProps}
@@ -51,11 +51,20 @@ const NotebookList = () => {
                 onKeyDown={(e) => { if (e.key === 'Enter') selectNotebook(nb.id); }}
                 className={`cursor-pointer px-2 py-1 rounded ${
                   nb.id === selectedNotebook ? "bg-gray-600 font-bold" : "hover:bg-gray-700"
-                } ${snapshot.isDraggingOver ? "bg-blue-700 border-2 border-dashed" : ""}`}
-                style={{ minHeight: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                }`}
+                style={{
+                  minHeight: "60px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative"
+                }}
               >
                 {nb.title}
-                {provided.placeholder}
+                {/* Render placeholder but hide it so the droppable functions correctly */}
+                <div style={{ display: "none" }}>
+                  {provided.placeholder}
+                </div>
               </li>
             )}
           </Droppable>

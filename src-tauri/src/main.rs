@@ -184,6 +184,18 @@ fn update_note_title(note_id: String, new_title: String) -> Result<(), String> {
 #[command]
 fn update_note_notebook(note_id: String, new_notebook_id: String) -> Result<(), String> {
     let conn = establish_connection()?;
+
+    // Optional: Verify that the destination notebook exists.
+    let mut stmt = conn
+        .prepare("SELECT id FROM notebooks WHERE id = ?")
+        .map_err(|e| e.to_string())?;
+    let exists = stmt
+        .exists([new_notebook_id.clone()])
+        .map_err(|e| e.to_string())?;
+    if !exists {
+        return Err(format!("No notebook found with id: {}", new_notebook_id));
+    }
+
     let affected_rows = conn
         .execute(
             "UPDATE notes SET notebook_id = ?, updated_at = datetime('now') WHERE id = ?",

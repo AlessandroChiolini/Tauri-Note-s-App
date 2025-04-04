@@ -1,6 +1,7 @@
 import React from "react";
 import { DragDropContext } from "react-beautiful-dnd";
 import Split from "react-split";
+import { invoke } from "@tauri-apps/api/core";
 import NotebookList from "./components/NotebookList";
 import NoteList from "./components/NoteList";
 import NoteEditor from "./components/NoteEditor";
@@ -9,16 +10,27 @@ import "./App.css";
 import { useAppContext } from "./contexts/AppContext";
 
 function App() {
-  const { updateNoteNotebook, selectNotebook } = useAppContext();
+  const { selectNotebook } = useAppContext();
+
+  // New helper to call the backend command update_note_notebook
+  const updateNoteNotebook = async (noteId, newNotebookId) => {
+    try {
+      await invoke("update_note_notebook", { noteId, newNotebookId });
+    } catch (error) {
+      console.error("Error updating note notebook:", error);
+    }
+  };
 
   const onDragEnd = async (result) => {
-    console.log("onDragEnd result:", result);
-    if (!result.destination) return;
-    const { draggableId, destination } = result;
-    if (!destination.droppableId.startsWith("notes-")) {
-      console.log("Changing notebook for note", draggableId, "to", destination.droppableId);
+    const { draggableId, source, destination } = result;
+    if (!destination) return;
+
+    // If the note is dropped in a different droppable area (e.g. a different notebook)
+    if (source.droppableId !== destination.droppableId) {
+      console.log(
+        "Changing notebook for note", draggableId, "to", destination.droppableId
+      );
       await updateNoteNotebook(draggableId, destination.droppableId);
-      // Ensure that your fetch or select function uses the new state:
       selectNotebook(destination.droppableId);
     }
   };

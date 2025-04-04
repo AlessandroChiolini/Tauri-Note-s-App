@@ -61,7 +61,10 @@ const NoteList = () => {
                       note.id === selectedNote ? "bg-gray-500 text-white" : ""
                     }`}
                   >
-                    <button
+                    {/* Replaced button with a div so the entire area is draggable */}
+                    <div
+                      role="button"
+                      tabIndex="0"
                       onClick={() => selectNote(note.id)}
                       onKeyDown={(e) => e.key === 'Enter' && selectNote(note.id)}
                       className="w-full text-left"
@@ -72,7 +75,7 @@ const NoteList = () => {
                         </div>
                         <span>Modifié le: {formatDate(note.updated_at)}</span>
                       </div>
-                    </button>
+                    </div>
                   </li>
                 )}
               </Draggable>
