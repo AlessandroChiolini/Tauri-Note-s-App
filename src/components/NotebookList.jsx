@@ -86,14 +86,14 @@ const NotebookList = () => {
       
       {contextMenu && (
         <div
-          className="absolute bg-white text-black border border-gray-300 rounded shadow-lg z-50"
+          className="fixed bg-white text-black border border-gray-300 rounded shadow-lg z-50"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button
             onClick={handleDelete}
             className="block px-4 py-2 hover:bg-gray-200 w-full text-left"
           >
-            Delete Notebook
+            Delete notebook
           </button>
         </div>
       )}
