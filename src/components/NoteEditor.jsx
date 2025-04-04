@@ -241,7 +241,7 @@ const NoteEditor = () => {
   };
 
   return (
-    <div className="flex-1 p-4 flex flex-col bg-gray-800 overflow-hidden">
+    <div className="flex-none min-w-0 p-4 flex flex-col bg-gray-800 overflow-hidden">
       {selectedNote ? (
         <>
           <div className="mb-4">

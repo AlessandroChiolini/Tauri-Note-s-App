@@ -40,7 +40,7 @@ const NoteList = () => {
   };
 
   return (
-    <div className="flex-1 bg-gray-700 text-white flex flex-col min-w-[200px] relative">
+    <div className="flex-1 min-w-0 bg-gray-700 text-white flex flex-col relative">
       <NoteListHeader />
       <Droppable droppableId={`notes-${selectedNotebook}`}>
         {(provided) => (

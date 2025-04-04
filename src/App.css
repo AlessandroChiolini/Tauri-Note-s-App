@@ -9,7 +9,7 @@
 
 .gutter.gutter-horizontal {
   cursor: col-resize;
-  width: 4px;
+  width: 4px !important;
 }
 
 div.react-mde {
