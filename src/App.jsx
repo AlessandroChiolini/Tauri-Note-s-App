@@ -1,144 +1,68 @@
-import { useState, useEffect } from "react";
+import React from "react";
+import { DragDropContext } from "react-beautiful-dnd";
+import Split from "react-split";
 import { invoke } from "@tauri-apps/api/core";
+import NotebookList from "./components/NotebookList";
+import NoteList from "./components/NoteList";
+import NoteEditor from "./components/NoteEditor";
 import "./App.css";
+import { useAppContext } from "./contexts/AppContext";
 
 function App() {
-  const [notebooks, setNotebooks] = useState([]);
-  const [selectedNotebook, setSelectedNotebook] = useState(null);
-  const [notes, setNotes] = useState([]);
-  const [selectedNote, setSelectedNote] = useState(null);
+  const { selectNotebook } = useAppContext();
 
-  // Load notebooks from SQLite when the app starts
-  useEffect(() => {
-    fetchNotebooks();
-  }, []);
-
-  // Fetch all notebooks from Tauri SQLite
-  const fetchNotebooks = async () => {
+  // Fonction pour mettre à jour le notebook de la note via l'API Tauri
+  const updateNoteNotebook = async (noteId, newNotebookId) => {
     try {
-      const result = await invoke("get_notebooks");
-      setNotebooks(result);
+      await invoke("update_note_notebook", { noteId, newNotebookId });
     } catch (error) {
-      console.error("Error fetching notebooks:", error);
+      console.error("Error updating note notebook:", error);
     }
   };
 
-  // Fetch notes when a notebook is selected
-  const selectNotebook = async (notebook) => {
-    setSelectedNotebook(notebook);
-    try {
-      const result = await invoke("get_notes", { notebook_id: notebook.id });
-      setNotes(result);
-    } catch (error) {
-      console.error("Error fetching notes:", error);
-    }
-  };
+  const onDragEnd = async (result) => {
+    const { draggableId, source, destination } = result;
+    if (!destination) return;
 
-  // Add a new notebook
-  const addNotebook = async () => {
-    const title = prompt("Enter notebook name:");
-    if (!title) return;
-
-    try {
-      await invoke("add_notebook", { title });
-      fetchNotebooks(); // Reload the notebooks list
-    } catch (error) {
-      console.error("Error adding notebook:", error);
-    }
-  };
-
-  // Add a new note to the selected notebook
-  const addNote = async () => {
-    if (!selectedNotebook) return;
-    const title = prompt("Enter note title:");
-    if (!title) return;
-
-    try {
-      await invoke("add_note", {
-        notebook_id: selectedNotebook.id,
-        title,
-        content: "",
-      });
-      selectNotebook(selectedNotebook); // Reload the notes list
-    } catch (error) {
-      console.error("Error adding note:", error);
-    }
-  };
-
-  // Select a note
-  const selectNote = (note) => {
-    setSelectedNote(note);
-  };
-
-  // Edit and save a note
-  const editNote = async (event) => {
-    if (!selectedNote) return;
-
-    const updatedContent = event.target.value;
-    setSelectedNote((prev) => ({ ...prev, content: updatedContent }));
-
-    try {
-      await invoke("update_note", {
-        note_id: selectedNote.id,
-        title: selectedNote.title,
-        content: updatedContent,
-      });
-    } catch (error) {
-      console.error("Error updating note:", error);
+    // Si la note est déposée dans un autre droppable (notebook différent)
+    if (source.droppableId !== destination.droppableId) {
+      console.log(
+        "Changing notebook for note", draggableId, "to", destination.droppableId
+      );
+      await updateNoteNotebook(draggableId, destination.droppableId);
+      selectNotebook(destination.droppableId);
     }
   };
 
   return (
-    <div className="app-container">
-      {/* Sidebar for Notebooks */}
-      <aside className="sidebar">
-        <h2>Joplin (Tauri)</h2>
-        <button onClick={addNotebook}>+ New Notebook</button>
-        <ul>
-          {notebooks.map((nb) => (
-            <li
-              key={nb.id}
-              onClick={() => selectNotebook(nb)}
-              className={selectedNotebook?.id === nb.id ? "active" : ""}
-            >
-              {nb.title}
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      {/* Sidebar for Notes */}
-      <aside className="notes-sidebar">
-        <button onClick={addNote} disabled={!selectedNotebook}>
-          + New Note
-        </button>
-        <ul>
-          {notes.map((note) => (
-            <li
-              key={note.id}
-              onClick={() => selectNote(note)}
-              className={selectedNote?.id === note.id ? "active" : ""}
-            >
-              {note.title}
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      {/* Note Editor */}
-      <main className="editor">
-        <div className="toolbar">
-          <h3>{selectedNote ? selectedNote.title : "No Note Selected"}</h3>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="w-screen h-screen bg-gray-900 text-white">
+        {/* Header sans bordure et avec fond uniforme */}
+        <div className="p-3 fixed top-0 left-0 right-0 z-50 flex items-center bg-gray-900">
+          <h1 className="text-white text-xl font-bold">Notes App</h1>
         </div>
-
-        <textarea
-          placeholder="Write your note here..."
-          value={selectedNote?.content || ""}
-          onChange={editNote}
-          disabled={!selectedNote}
-        />
-      </main>
-    </div>
+        
+        {/* Contenu principal, décalé pour laisser place au header */}
+        <div className="pt-16 h-full">
+          <Split
+            className="flex h-full"
+            sizes={[15, 25, 60]}
+            minSize={100}
+            gutterSize={4}
+            expandToMin={false}
+            gutterAlign="center"
+            snapOffset={30}
+            dragInterval={1}
+            direction="horizontal"
+            cursor="col-resize"
+          >
+            <NotebookList />
+            <NoteList />
+            <NoteEditor />
+          </Split>
+        </div>
+      </div>
+    </DragDropContext>
   );
 }
 
