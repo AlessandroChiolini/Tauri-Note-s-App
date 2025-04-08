@@ -5,7 +5,14 @@ import { useAppContext } from "../contexts/AppContext";
 import NoteListHeader from "./NoteListHeader";
 
 const NoteList = () => {
-  const { notes, selectedNote, selectNote, deleteNote, selectedNotebook } = useAppContext();
+  const { 
+    notes, 
+    selectedNote, 
+    selectNote, 
+    deleteNote, 
+    selectedNotebook,
+    fetchNotes  // Assurez-vous d'importer fetchNotes ici
+  } = useAppContext();
   const [contextMenu, setContextMenu] = useState(null);
 
   // Hide context menu when clicking anywhere
@@ -20,10 +27,20 @@ const NoteList = () => {
     setContextMenu({ noteId, x: e.clientX, y: e.clientY });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (contextMenu && contextMenu.noteId) {
-      deleteNote(contextMenu.noteId);
-      setContextMenu(null);
+      try {
+        await deleteNote(contextMenu.noteId);
+        setContextMenu(null);
+        
+        // Force le rafraîchissement de la liste des notes
+        if (selectedNotebook) {
+          // Si vous avez une fonction fetchNotes dans votre contexte
+          await fetchNotes(selectedNotebook);
+        }
+      } catch (error) {
+        console.error("Failed to delete note:", error);
+      }
     }
   };
 

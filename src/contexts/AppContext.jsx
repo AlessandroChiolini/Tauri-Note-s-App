@@ -1,5 +1,5 @@
 // src/contexts/AppContext.jsx
-import React, { createContext, useContext, useMemo, useCallback } from "react";
+import React, { createContext, useContext, useMemo, useCallback, useState } from "react";
 import PropTypes from 'prop-types';
 import { useNotebooks } from "../hooks/useNotebooks";
 import { invoke } from "@tauri-apps/api/core";
@@ -8,8 +8,14 @@ import { saveImage as saveImageAPI } from "../services/api";
 const AppContext = createContext(null);
 
 export const AppProvider = ({ children }) => {
+  // Add trashUpdateCounter state to the context
+  const [trashUpdateCounter, setTrashUpdateCounter] = useState(0);
+
   // useNotebooks now returns notebooks, notes, updateNoteNotebook, selectNotebook, etc.
-  const notebooksData = useNotebooks();
+  const notebooksData = useNotebooks({
+    // other props
+    updateTrashCounter: () => setTrashUpdateCounter(prev => prev + 1),
+  });
 
   // Add deleteNote function to the context
   const deleteNote = useCallback(async (noteId) => {
@@ -40,14 +46,15 @@ export const AppProvider = ({ children }) => {
     }
   }, []);
 
-  // Combine all the functionality from notebooksData along with deleteNote and saveImage
+  // Combine all the functionality from notebooksData along with deleteNote, saveImage, and trashUpdateCounter
   const contextValue = useMemo(() => {
     return { 
       ...notebooksData,
       deleteNote,
       saveImage,
+      trashUpdateCounter,
     };
-  }, [notebooksData, deleteNote, saveImage]);
+  }, [notebooksData, deleteNote, saveImage, trashUpdateCounter]);
 
   return (
     <AppContext.Provider value={contextValue}>

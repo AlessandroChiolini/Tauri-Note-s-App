@@ -3,12 +3,18 @@ import { invoke } from "@tauri-apps/api/core";
 import { useAppContext } from "../contexts/AppContext";
 
 const TrashBin = () => {
-  const { notebooks, loadNotes } = useAppContext();
+  const { notebooks, loadNotes, trashUpdateCounter } = useAppContext();
   const [deletedNotes, setDeletedNotes] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [restoreError, setRestoreError] = useState(null);
   
-  // Load deleted notes when the trash bin is opened
+  // Load deleted notes when the trash bin is opened OR when a note is deleted
+  useEffect(() => {
+    // Always load deleted notes count even if closed
+    loadDeletedNotes();
+  }, [trashUpdateCounter]);
+  
+  // Additional loading when opened (for UI animation purposes)
   useEffect(() => {
     if (isOpen) {
       loadDeletedNotes();

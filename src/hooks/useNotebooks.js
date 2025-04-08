@@ -11,7 +11,10 @@ import {
   deleteNote as deleteNoteAPI
 } from "../services/api";
 
-export function useNotebooks() {
+export function useNotebooks({ 
+  // autres props
+  updateTrashCounter,
+}) {
   const [notebooks, setNotebooks] = useState([]);
   const [allNotes, setAllNotes] = useState([]); // stores the full list
   const [notes, setNotes] = useState([]);       // filtered list for display
@@ -31,24 +34,17 @@ export function useNotebooks() {
   };
 
   const fetchNotes = async (notebookId, clearSelection = true) => {
-    setSelectedNotebook(notebookId);
     if (clearSelection) {
       setSelectedNote(null);
     }
+    
     try {
       const data = await getNotes(notebookId);
-      setAllNotes(data);
-      if (searchQuery) {
-        setNotes(
-          data.filter((note) =>
-            note.title.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        );
-      } else {
-        setNotes(data);
-      }
+      setNotes(data);
+      return data;
     } catch (error) {
       console.error("Error fetching notes:", error);
+      return [];
     }
   };
 
@@ -206,10 +202,26 @@ export function useNotebooks() {
 
   const deleteNote = async (noteId) => {
     try {
+      // Appeler l'API pour supprimer la note
       await deleteNoteAPI(noteId);
+      
+      // Mettre à jour l'état local des notes visibles
       setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+      
+      // Mettre à jour également le tableau complet des notes
+      setAllNotes((prevAllNotes) => prevAllNotes.filter((note) => note.id !== noteId));
+      
+      // Si la note supprimée était sélectionnée, effacer la sélection
+      if (selectedNote === noteId) {
+        setSelectedNote(null);
+      }
+      
+      // Mettre à jour le compteur de la corbeille pour déclencher un rafraîchissement
+      updateTrashCounter();
+      
+      console.log(`Note ${noteId} supprimée avec succès`);
     } catch (error) {
-      console.error("Error deleting note:", error);
+      console.error("Erreur lors de la suppression de la note:", error);
     }
   };
 
@@ -262,6 +274,7 @@ export function useNotebooks() {
     searchNotes,
     deleteNote,
     sortNotesByTitle,
-    sortNotesByDate
+    sortNotesByDate,
+    fetchNotes
   };
 }

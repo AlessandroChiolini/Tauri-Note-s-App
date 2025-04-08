@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import * as Showdown from "showdown";
 import { useAppContext } from "../contexts/AppContext";
-import NoteInfoBtn from "./NoteInfoBtn";
 
 const NoteEditor = () => {
   const { selectedNote, notes, updateNoteContent, updateNoteTitle, saveImage } = useAppContext();
