@@ -25,6 +25,8 @@ const NoteEditor = () => {
     simplifiedAutoLink: true,
     strikethrough: true,
     tasklists: true,
+    openLinksInNewWindow: true,  // Add this line to open links in new tabs
+    backslashEscapesHTMLTags: true // Add this for proper HTML escaping
   });
 
   const wrapSelectedText = (before, after) => {

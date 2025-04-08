@@ -167,6 +167,16 @@ div.react-mde ol {
   background-color: #2d3748;
 }
 
+/* Add this to your existing markdown styles */
+.markdown-body a {
+  color: #3182ce; /* Blue color for links */
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
 /* Styles pour les images chargées depuis la BD */
 .db-image {
   display: inline-block;
