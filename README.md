@@ -1,6 +1,54 @@
-![Logo](./images/tauri-2-0.png)
+<a href="https://tauri.app/" target="_blank">
+    <img src="./images/tauri-2-0.png" alt="Tauri Logo" />
+</a>
 
 # Tauri 2.0
+
+# Table of Contents
+
+- [Tauri 2.0](#tauri-20)
+- [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Technical Architecture](#technical-architecture)
+    - [Dual-Layer Design](#dual-layer-design)
+      - [Frontend (UI Layer)](#frontend-ui-layer)
+      - [Backend (Core Layer)](#backend-core-layer)
+    - [Communication](#communication)
+  - [Build \& Packaging Process](#build--packaging-process)
+  - [Installation and Environment Setup](#installation-and-environment-setup)
+    - [Prerequisites](#prerequisites)
+    - [Installing the Tauri CLI](#installing-the-tauri-cli)
+    - [IDE and Developer Tools](#ide-and-developer-tools)
+  - [Creating and Running a Tauri App](#creating-and-running-a-tauri-app)
+    - [Setting Up a New Tauri Project](#setting-up-a-new-tauri-project)
+    - [Running in Development Mode](#running-in-development-mode)
+    - [Building for Production](#building-for-production)
+  - [Detailed Tauri API and Command System](#detailed-tauri-api-and-command-system)
+    - [Defining Rust Commands](#defining-rust-commands)
+    - [Calling Commands from the Frontend](#calling-commands-from-the-frontend)
+  - [Advanced Configuration and Customization](#advanced-configuration-and-customization)
+    - [Tauri Configuration File](#tauri-configuration-file)
+    - [Customizing the Build Process](#customizing-the-build-process)
+  - [Advantages, Use Cases, and Comparisons](#advantages-use-cases-and-comparisons)
+    - [Advantages Over Other Frameworks](#advantages-over-other-frameworks)
+    - [When to Use Tauri](#when-to-use-tauri)
+    - [Comparisons with Alternatives](#comparisons-with-alternatives)
+  - [Our Performance Measurements](#our-performance-measurements)
+  - [Application Size Comparison](#application-size-comparison)
+  - [Real-World Examples and Use Cases](#real-world-examples-and-use-cases)
+  - [Conclusion](#conclusion)
+- [Tauri Notes App](#tauri-notes-app)
+  - [Overview](#overview-1)
+  - [Prerequisites](#prerequisites-1)
+    - [Development Environment](#development-environment)
+    - [Recommended IDE Configuration](#recommended-ide-configuration)
+  - [Project Setup](#project-setup)
+    - [Option 1: Creating a New Tauri Project](#option-1-creating-a-new-tauri-project)
+    - [Option 2: Using This Repository](#option-2-using-this-repository)
+  - [Development Workflow](#development-workflow)
+    - [Running the Development Environment](#running-the-development-environment)
+    - [Building for Production](#building-for-production-1)
+  - [Architecture](#architecture)
 
 ## Overview
 
@@ -25,6 +73,8 @@ Tauri splits the application into two major layers:
 - **Rust-Powered**: The backend is written in Rust, known for its performance and safety. It compiles to native code, ensuring low memory overhead and high speed.
 - **Secure IPC (Inter-Process Communication)**: The frontend communicates with the Rust backend via a command-based system. Only whitelisted commands can be called, significantly reducing the risk of remote code execution or unintended system access.
 - **Access to Native APIs**: Through Rust, Tauri can interact with operating system APIs (file system, notifications, window management) without exposing these directly to the web layer.
+- 
+![Tauri Trust Boundaries](./images/tauri-trust-boundaries.C0cC9LAT_Z2iV8qr.svg)
 
 ### Communication
 - **Command Invocation**: In your frontend JavaScript, you call Tauri's API (e.g., `window.__TAURI__.invoke('command_name', { param: value })`) to execute a function implemented in Rust.
