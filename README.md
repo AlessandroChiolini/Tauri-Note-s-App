@@ -205,6 +205,18 @@ Example snippet from a `tauri.conf.json`:
 | Performance | Near-native performance in Rust | Extra overhead from Chromium | Optimized for mobile UI |
 | Cross-Platform | Excellent for desktop (Windows, macOS, Linux) | Excellent for desktop | Primarily mobile and web |
 
+## Our Performance Measurements
+
+The chart below shows the actual performance measurements we recorded when comparing the two applications we created - one built with Tauri and another with Electron. These real-world benchmarks demonstrate the significant performance advantages of Tauri in terms of memory usage, CPU utilization, and startup time.
+
+![Performance Comparaison](./images/performance_comparison.png)
+
+## Application Size Comparison
+
+The image above illustrates the significant difference in executable size between the two applications we created. It shows a direct comparison of the .exe file sizes for our Tauri-based implementation versus our Electron-based implementation of the same notes application. This demonstrates one of Tauri's key advantages - dramatically smaller application bundles compared to Electron alternatives.
+
+   ![Size Comparaison](./images/app_size.png)
+
 ## Real-World Examples and Use Cases
 
 - **Productivity Apps**: Note-taking, task managers, and lightweight editors where a responsive UI and small install size are crucial.
