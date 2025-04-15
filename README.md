@@ -1,3 +1,5 @@
+![Logo](./images/tauri-2-0.png)
+
 # Tauri 2.0
 
 ## Overview
@@ -213,7 +215,7 @@ The chart below shows the actual performance measurements we recorded when compa
 
 ## Application Size Comparison
 
-The image above illustrates the significant difference in executable size between the two applications we created. It shows a direct comparison of the .exe file sizes for our Tauri-based implementation versus our Electron-based implementation of the same notes application. This demonstrates one of Tauri's key advantages - dramatically smaller application bundles compared to Electron alternatives.
+The image below illustrates the significant difference in executable size between the two applications we created. It shows a direct comparison of the .exe file sizes for our Tauri-based implementation versus our Electron-based implementation of the same notes application. This demonstrates one of Tauri's key advantages - dramatically smaller application bundles compared to Electron alternatives.
 
    ![Size Comparaison](./images/app_size.png)
 
