@@ -4,10 +4,10 @@
 
 # Tauri 2.0
 
-# Table of Contents
+## Table of Contents
 
 - [Tauri 2.0](#tauri-20)
-- [Table of Contents](#table-of-contents)
+  - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Technical Architecture](#technical-architecture)
     - [Dual-Layer Design](#dual-layer-design)
@@ -381,7 +381,7 @@ The compiled application will be available in the `src-tauri/target/release` dir
 ## Architecture
 
 The application follows a dual-layer architecture:
-- **Frontend**: React-based UI layer
-- **Backend**: Rust-powered core with access to native system capabilities
-
-This separation provides the benefits of web development productivity combined with the performance and security advantages of Rust.
+- **Frontend**: React-based UI layer  
+[Frontend Source Documentation](https://github.com/AlessandroChiolini/Tauri-Note-s-App/blob/main/src/frontend_src.md)
+- **Backend**: Rust-powered core with access to native system capabilities  
+[Backend Source Documentation](https://github.com/AlessandroChiolini/Tauri-Note-s-App/blob/main/src-tauri/src/backend_src.md)
