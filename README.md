@@ -1,5 +1,5 @@
 <a href="https://tauri.app/" target="_blank">
-    <img src="./images/tauri-2-0.png" alt="Tauri Logo" />
+    <img src="./images/tauri-with-wordmark-1.svg" alt="Tauri Logo" />
 </a>
 
 # Tauri 2.0
